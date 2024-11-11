@@ -85,7 +85,7 @@ contract MerchantAccount is Ownable{
                 if (currentLoan.repaidAmount < currentLoan.repaymentAmount) {
                     IERC20(usde).transfer(currentLoan.investor, paymentAmount);
                     currentLoan.repaidAmount = currentLoan.repaidAmount + paymentAmount;
-                }                
+                }           
             }
         }
     }
@@ -97,6 +97,26 @@ contract MerchantAccount is Ownable{
         currentLoanRequest.repaidAmount = 0;
         currentLoanRequest.loanPeriod = loanPeriod;
         currentLoanRequest.monthlyRepaymentAmount = mrr / loanPeriod;
+    }
+
+    function receiveLoan(address investor) external onlyRouter {
+        require(currentLoan.investor == address(0), "Merchant already has an ongoing laon");
+        currentLoan = currentLoanRequest;
+        currentLoan.investor = investor;
+    }
+
+    function getLoan(address investorPool, uint256 repaymentAmount, uint256 loanPeriod, uint256 monthlyRepaymentAmount) external onlyRouter() {
+        currentLoanRequest.investor = investorPool;
+        currentLoanRequest.repaymentAmount = repaymentAmount;
+        currentLoanRequest.repaidAmount = 0;
+        currentLoanRequest.loanPeriod = loanPeriod;
+        currentLoanRequest.monthlyRepaymentAmount = monthlyRepaymentAmount;
+    }
+
+    function repayLoan() external onlyOwner {
+        require(currentLoan.repaymentAmount > currentLoan.repaidAmount, "Loan has been repaid");
+        uint256 amount = currentLoan.repaymentAmount - currentLoan.repaidAmount;
+        IERC20(usde).transfer(currentLoan.investor, amount);
     }
 
     function getPaymentAmount(uint256 subPrice) internal view returns(uint256 repaymentAmountPerSub) {
