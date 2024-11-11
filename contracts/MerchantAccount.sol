@@ -4,6 +4,7 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./IRouter.sol";
 
 contract MerchantAccount is Ownable{
 
@@ -20,6 +21,14 @@ contract MerchantAccount is Ownable{
     uint256 public freeTrial;
     address public usde;
     address public routerAddress;
+
+    struct loan {
+        address investor;
+        uint256 repaymentAmount;
+        uint256 repaidAmount;
+        uint256 loanPeriod;
+        uint256 monthlyRepaymentAmount;
+    }
     
     struct subscription {
         address userAccount;
@@ -27,6 +36,8 @@ contract MerchantAccount is Ownable{
         bool status;
         uint8 tier;
     }
+
+    loan public currentLoan;
 
     mapping (uint256 => subscription) public subscriptions;
     mapping (uint8 => uint256) public prices;
@@ -61,19 +72,37 @@ contract MerchantAccount is Ownable{
 
     // function to be automated 
     function chargeSubscription() external {
-        // charge user
-            // call charge function
-            // 
-        // check for active loans
-        // calculate percentages based on MRR and loan amount and remaining debt
-        // payout to the investor 
-    }
+        for (uint i = 0; i < _subscriptionCount.current(); i++) {
+            if (subscriptions[i].paymentDue >= block.timestamp) {
+                uint8 tier = subscriptions[i].tier;
+                uint256 price = prices[tier];
 
-    function getAddresses() internal returns(address[] users) {
-        for(i = 0, i < _subscriptionCount, i++) {
-            
+                IRouter(routerAddress).charge(subscriptions[i].userAccount, address(this), price);
+                uint256 paymentAmount = getPaymentAmount(price);
+                IERC20(usde).transfer(currentLoan.investor, paymentAmount);
+            }
         }
     }
+
+    function getPaymentAmount(uint256 subPrice) internal view returns(uint256 repaymentAmountPerSub) {
+       uint256 mrr = getMRR();
+       uint256 rpa = currentLoan.repaymentAmount / currentLoan.loanPeriod;
+       uint256 rpp = (rpa / mrr) * 100;
+
+       repaymentAmountPerSub = (rpp / 100) * subPrice;
+    }
+
+    function getMRR() public view returns (uint256 mrr) {
+        for (uint i = 0; i < _subscriptionCount.current(); i++) {
+            if (subscriptions[i].status == true) {
+                uint8 tier = subscriptions[i].tier;
+                uint256 price = prices[tier];
+
+                mrr = mrr + price;
+            }
+        }
+    }
+
 
     modifier onlyRouter() {
         require(msg.sender == routerAddress, "No Permision to Call Function");
@@ -87,4 +116,3 @@ contract MerchantAccount is Ownable{
 // 3. sevrice loan 
 // 4. withdraw ✅
 // 5. invest USDe
-// 6. convert
