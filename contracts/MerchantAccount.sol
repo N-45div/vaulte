@@ -38,6 +38,7 @@ contract MerchantAccount is Ownable{
     }
 
     loan public currentLoan;
+    loan public currentLoanRequest;
 
     mapping (uint256 => subscription) public subscriptions;
     mapping (uint8 => uint256) public prices;
@@ -70,7 +71,7 @@ contract MerchantAccount is Ownable{
         subscriptions[_subscriptionCount.current()].status = true;
     }
 
-    // function to be automated 
+    // function to be automated
     function chargeSubscription() external {
         for (uint i = 0; i < _subscriptionCount.current(); i++) {
             if (subscriptions[i].paymentDue >= block.timestamp) {
@@ -79,7 +80,7 @@ contract MerchantAccount is Ownable{
 
                 IRouter(routerAddress).charge(subscriptions[i].userAccount, address(this), price);
                 subscriptions[i].paymentDue = block.timestamp + 30 days;
-                
+
                 uint256 paymentAmount = getPaymentAmount(price);
                 if (currentLoan.repaidAmount < currentLoan.repaymentAmount) {
                     IERC20(usde).transfer(currentLoan.investor, paymentAmount);
@@ -87,6 +88,15 @@ contract MerchantAccount is Ownable{
                 }                
             }
         }
+    }
+
+    function makeRequest(uint256 loanAmount, uint256 interest, uint256 loanPeriod) external onlyOwner {
+        uint256 mrr = getMRR();
+        currentLoanRequest.investor = address(0);
+        currentLoanRequest.repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
+        currentLoanRequest.repaidAmount = 0;
+        currentLoanRequest.loanPeriod = loanPeriod;
+        currentLoanRequest.monthlyRepaymentAmount = mrr / loanPeriod;
     }
 
     function getPaymentAmount(uint256 subPrice) internal view returns(uint256 repaymentAmountPerSub) {
@@ -116,8 +126,8 @@ contract MerchantAccount is Ownable{
 }
 
 // functions
-// 1. accept payment/charge 
+// 1. accept payment/charge ✅
 // 2. accept/take loan 
-// 3. sevrice loan 
+// 3. sevrice loan ✅
 // 4. withdraw ✅
 // 5. invest USDe
