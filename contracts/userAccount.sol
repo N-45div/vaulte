@@ -49,14 +49,17 @@ contract UserAccount is Ownable{
     }
 
     function paySubscription(uint256 amount, address tokenAddress, address merchantAddress) public onlyRouter() {
-        
-        IERC20(tokenAddress).transfer(merchantAddress, amount);
+        for (uint i = 0; i < _subscriptionCount.current(); i++) {
+            if (userSubscriptions[i].merchantAddress == merchantAddress && userSubscriptions[i].status == true) {
+                IERC20(tokenAddress).transfer(merchantAddress, amount);
+            }
+        }
     }
 
     modifier onlyRouter() {
         require(msg.sender == routerAddress, "No Permision to Call Function");
         _;
     }
-    
+
 
 }

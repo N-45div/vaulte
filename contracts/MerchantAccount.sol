@@ -78,8 +78,13 @@ contract MerchantAccount is Ownable{
                 uint256 price = prices[tier];
 
                 IRouter(routerAddress).charge(subscriptions[i].userAccount, address(this), price);
+                subscriptions[i].paymentDue = block.timestamp + 30 days;
+                
                 uint256 paymentAmount = getPaymentAmount(price);
-                IERC20(usde).transfer(currentLoan.investor, paymentAmount);
+                if (currentLoan.repaidAmount < currentLoan.repaymentAmount) {
+                    IERC20(usde).transfer(currentLoan.investor, paymentAmount);
+                    currentLoan.repaidAmount = currentLoan.repaidAmount + paymentAmount;
+                }                
             }
         }
     }
