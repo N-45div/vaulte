@@ -69,6 +69,8 @@ contract MerchantAccount is Ownable{
         subscriptions[_subscriptionCount.current()].paymentDue = paymentDue;
         subscriptions[_subscriptionCount.current()].tier = tier;
         subscriptions[_subscriptionCount.current()].status = true;
+
+        _subscriptionCount.increment();
     }
 
     // function to be automated
@@ -91,12 +93,11 @@ contract MerchantAccount is Ownable{
     }
 
     function makeRequest(uint256 loanAmount, uint256 interest, uint256 loanPeriod) external onlyOwner {
-        uint256 mrr = getMRR();
         currentLoanRequest.investor = address(0);
         currentLoanRequest.repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
         currentLoanRequest.repaidAmount = 0;
         currentLoanRequest.loanPeriod = loanPeriod;
-        currentLoanRequest.monthlyRepaymentAmount = mrr / loanPeriod;
+        currentLoanRequest.monthlyRepaymentAmount = loanAmount / loanPeriod;
     }
 
     function receiveLoan(address investor) external onlyRouter {
@@ -147,7 +148,7 @@ contract MerchantAccount is Ownable{
 
 // functions
 // 1. accept payment/charge ✅
-// 2. accept/take loan 
+// 2. accept/take loan ✅
 // 3. sevrice loan ✅
 // 4. withdraw ✅
 // 5. invest USDe
