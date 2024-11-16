@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./IRouter.sol";
+import "./Interfaces/IRouter.sol";
 
 contract InvestorAccount is Ownable{
 
@@ -40,8 +40,8 @@ contract InvestorAccount is Ownable{
         uint256 monthlyRepaymentAmount;
     }
 
-    mapping (uint256 => loan) public loans;
     mapping (uint256 => offer) public offers;
+    mapping (uint256 => loan) public loans;
 
     constructor(address _routerAddress, address usdeAddress, address owner) Ownable(owner) {
         routerAddress = _routerAddress;
@@ -91,8 +91,3 @@ contract InvestorAccount is Ownable{
         _;
     }
 }
-
-// functions
-// 1. offer/give loan ✅
-// 2. withdraw ✅
-// 3. invest USDe(15%)

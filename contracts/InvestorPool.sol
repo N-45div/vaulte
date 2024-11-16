@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./IRouter.sol";
+import "./Interfaces/IRouter.sol";
 
 contract InvestorPool is Ownable {
     /**
@@ -61,7 +61,7 @@ contract InvestorPool is Ownable {
         require(amountPercentage <= 10, "Amount too high");
         require(loanPeriod_ <= loanPeriod, "max repayment period exceeded");
         uint256 repaymentAmount = ((interest / 100) * amount) + amount;
-        uint256 monthlyRepaymentAmount = amount / loanPeriod_;
+        uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod_;
         loans[_loanCount.current()] = loan(merchantAccount, repaymentAmount, 0, loanPeriod_, monthlyRepaymentAmount);
 
         IERC20(usde).transfer(merchantAccount, amount);
@@ -72,9 +72,3 @@ contract InvestorPool is Ownable {
         _;
     }
 }
-// functions
-// 0. deploy - interest, loan period max ✅
-// 1. contribute/give loan ✅
-// 2. withdraw ✅
-// 3. invest USDe
-// 4. re-invest(re-offer loans)

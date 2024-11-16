@@ -1,66 +1,75 @@
-// // SPDX-License-Identifier: UNLICENSED
-// pragma solidity ^0.8.27;
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.27;
 
-// import "@openzeppelin/contracts/access/Ownable.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./Interfaces/IMerchant.sol";
+import "./Interfaces/IUser.sol";
+import "./Interfaces/IUserFactory.sol";
+import "./Interfaces/IInvestor.sol";
+import "./Interfaces/IInvestorPool.sol";
+
 // import "@openzeppelin/contracts/utils/Counters.sol";
 
-// contract Router is Ownable{
+contract Router is Ownable{
 
-//     // /**
-//     //  * @notice Utilizing OpenZeppelin's Counters library for managing counters, which includes functions like increment, decrement, and reset.
-//     //  */
-//     // using Counters for Counters.Counter;
+    address public userFactoryAddress;
 
-//     // /**
-//     //  * @notice Counter for tracking the number of subscribtions.
-//     //  */
-//     // Counters.Counter public _subscriptionCount;
+    event Subscription(address userAccount, address merchantAccount, uint256 tier, uint256 subTime);
+    event SubscriptionPayment(address userAccount, address merchantAccount, uint256 paymentAmount, uint256 paymentTime);
+    event LoanDisbursed(address investorAccount, address merchantAccount, uint256 amount, uint8 loanCategory);
 
-//     // uint256 public freeTrial;
-//     // struct subscription {
-//     //     address userAccount;
-//     //     uint256 paymentDue;
-//     //     bool status;
-//     //     uint8 tier;
-//     // }
+    constructor(address _userFactoryAddress) Ownable(msg.sender) {
+        userFactoryAddress = _userFactoryAddress;
+    }
 
-//     // mapping (uint256 => uint) public subscriptions;
-//     // mapping (uint8 => uint256) public prices;
-//     address public userFactoryAddress;
+    function subscribe(uint8 tier, address merchantAccount) external {
+        // pull free trial from merchant account
+        uint256 freeTrial = IMerchant(merchantAccount).freeTrial();
+        // pull the userAccount from userAccount factory
+        address userAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        uint256 paymentDue = freeTrial + block.timestamp;
+        // call subscribe on merchant and user accounts
+        IUser(userAccount).subscribe(tier, paymentDue, merchantAccount);
+        IMerchant(merchantAccount).setSubscription(tier, paymentDue, userAccount);
 
-//     constructor(address _userFactoryAddress) Ownable(msg.sender) {
-//         userFactoryAddress = _userFactoryAddress;
-//     }
+        emit Subscription(userAccount, merchantAccount, tier, block.timestamp);
+    }
 
-//     // function setPrice(uint8 tier, uint256 price) public onlyOwner() {
-//     //     prices[tier] = price;
-//     // }
+    function fundRequest(address merchantAccount) external {
+        address investorAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        require(investorAccount != address(0), "Create an Account");
+        ( , uint256 loanAmount, uint256 interest, , , uint256 loanPeriod, uint256 monthlyRepaymentAmount) = IMerchant(merchantAccount).currentLoanRequest();
+        IMerchant(merchantAccount).receiveLoan(investorAccount);
+        IInvestor(investorAccount).acceptRequest(merchantAccount, loanAmount, interest, loanPeriod, monthlyRepaymentAmount);
+        // emit event
+        emit LoanDisbursed(investorAccount, merchantAccount, loanAmount, 0);
+    }
 
-//     // function setFreeTrial(uint256 trialPeriod) public onlyOwner() {
-//     //     freeTrial = trialPeriod;
-//     // }
+    function acceptOffer(address investorAccount, uint256 offerId) external {
+        (address investor, uint256 loanAmount, , , uint256 loanPeriod, uint256 monthlyRepaymentAmount) = IInvestor(investorAccount).offers(offerId);
+        address merchantAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        uint256 repaymentAmount = monthlyRepaymentAmount * loanPeriod;
+        IMerchant(merchantAccount).getLoan(investor, repaymentAmount, loanPeriod, monthlyRepaymentAmount);
+        IInvestor(investor).disburseLoanOffer(merchantAccount, offerId);
+        emit LoanDisbursed(investorAccount, merchantAccount, loanAmount, 1);
+    }
 
-//     // function withdraw(uint256 amount, address tokenAddress) public onlyOwner {
-//     //     IERC20(tokenAddress).transfer(msg.sender, amount);
-//     // }
+    function getLoan(address investorPool, uint256 loanAmount) external {
+        address merchantAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        uint256 interest = IInvestorPool(investorPool).interest();
+        uint256 loanPeriod = IInvestorPool(investorPool).loanPeriod();
+        uint256 repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
+        uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod;
+        IMerchant(merchantAccount).getLoan(investorPool, repaymentAmount, loanPeriod, monthlyRepaymentAmount);
+        IInvestorPool(investorPool).getLoan(merchantAccount, loanAmount, loanPeriod);
+        emit LoanDisbursed(investorPool, merchantAccount, loanAmount, 2);
+    }
 
-//     function subscribe(uint8 tier, address merchantAccount) external {
-//         // pull free trial from merchant account
-//         uint256 freeTrial = IMerchant(merchantAccount).freeTrial();
-//         // pull the userAccount from userAccount factory
-//         address userAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
-//         uint256 paymentDue = freeTrial + block.timestamp;
-//         // call subscribe on merchant and user accounts
-//         IUser(userAccount).subscribe(tier, paymentDue, merchantAccount);
-//         IMerchant(merchantAccount).subscribe(tier, paymentDue, userAccount);
-//     }
-// }
+    function charge(address userAccount, address merchantAccount, uint256 amount) external {
+        IUser(userAccount).paySubscription(amount, merchantAccount);
+        emit SubscriptionPayment(userAccount, merchantAccount, amount, block.timestamp);
+    }
 
-// // functions
-// // 1. accept payment/charge 
-// // 2. accept/take loan 
-// // 3. sevrice loan 
-// // 4. withdraw ✅
-// // 5. invest USDe
-// // 6. convert
+
+}

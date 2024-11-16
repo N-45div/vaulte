@@ -4,9 +4,9 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./IRouter.sol";
+import "./Interfaces/IRouter.sol";
 
-contract MerchantAccount is Ownable{
+contract MerchantAccount is Ownable {
 
     /**
      * @notice Utilizing OpenZeppelin's Counters library for managing counters, which includes functions like increment, decrement, and reset.
@@ -29,7 +29,17 @@ contract MerchantAccount is Ownable{
         uint256 loanPeriod;
         uint256 monthlyRepaymentAmount;
     }
-    
+
+    struct loanRequest {
+        address investor;
+        uint256 loanAmount;
+        uint256 interest;
+        uint256 repaymentAmount;
+        uint256 repaidAmount;
+        uint256 loanPeriod;
+        uint256 monthlyRepaymentAmount;
+    }
+
     struct subscription {
         address userAccount;
         uint256 paymentDue;
@@ -38,7 +48,7 @@ contract MerchantAccount is Ownable{
     }
 
     loan public currentLoan;
-    loan public currentLoanRequest;
+    loanRequest public currentLoanRequest;
 
     mapping (uint256 => subscription) public subscriptions;
     mapping (uint8 => uint256) public prices;
@@ -94,24 +104,31 @@ contract MerchantAccount is Ownable{
 
     function makeRequest(uint256 loanAmount, uint256 interest, uint256 loanPeriod) external onlyOwner {
         currentLoanRequest.investor = address(0);
+        currentLoanRequest.loanAmount = loanAmount;
+        currentLoanRequest.interest = interest;
         currentLoanRequest.repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
         currentLoanRequest.repaidAmount = 0;
         currentLoanRequest.loanPeriod = loanPeriod;
-        currentLoanRequest.monthlyRepaymentAmount = loanAmount / loanPeriod;
+        currentLoanRequest.monthlyRepaymentAmount = (((interest / 100) * loanAmount) + loanAmount) / loanPeriod;
     }
 
     function receiveLoan(address investor) external onlyRouter {
         require(currentLoan.investor == address(0), "Merchant already has an ongoing laon");
-        currentLoan = currentLoanRequest;
         currentLoan.investor = investor;
+        currentLoan.repaymentAmount = currentLoanRequest.repaymentAmount;
+        currentLoan.repaidAmount = 0;
+        currentLoan.loanPeriod = currentLoanRequest.loanPeriod;
+        currentLoan.monthlyRepaymentAmount = currentLoanRequest.monthlyRepaymentAmount;
     }
 
-    function getLoan(address investorPool, uint256 repaymentAmount, uint256 loanPeriod, uint256 monthlyRepaymentAmount) external onlyRouter() {
-        currentLoanRequest.investor = investorPool;
-        currentLoanRequest.repaymentAmount = repaymentAmount;
-        currentLoanRequest.repaidAmount = 0;
-        currentLoanRequest.loanPeriod = loanPeriod;
-        currentLoanRequest.monthlyRepaymentAmount = monthlyRepaymentAmount;
+    function getLoan(address investor, uint256 repaymentAmount, uint256 loanPeriod, uint256 monthlyRepaymentAmount) external onlyRouter() {
+        require(currentLoan.investor == address(0), "Merchant already has an ongoing laon");
+
+        currentLoan.investor = investor;
+        currentLoan.repaymentAmount = repaymentAmount;
+        currentLoan.repaidAmount = 0;
+        currentLoan.loanPeriod = loanPeriod;
+        currentLoan.monthlyRepaymentAmount = monthlyRepaymentAmount;
     }
 
     function repayLoan() external onlyOwner {
@@ -145,10 +162,3 @@ contract MerchantAccount is Ownable{
         _;
     }
 }
-
-// functions
-// 1. accept payment/charge ✅
-// 2. accept/take loan ✅
-// 3. sevrice loan ✅
-// 4. withdraw ✅
-// 5. invest USDe

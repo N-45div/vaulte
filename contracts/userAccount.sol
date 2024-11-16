@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./IMerchant.sol";
+import "./Interfaces/IMerchant.sol";
 
 contract UserAccount is Ownable{
     /**
@@ -48,10 +48,10 @@ contract UserAccount is Ownable{
         }
     }
 
-    function paySubscription(uint256 amount, address tokenAddress, address merchantAddress) public onlyRouter() {
+    function paySubscription(uint256 amount, address merchantAddress) external onlyRouter() {
         for (uint i = 0; i < _subscriptionCount.current(); i++) {
             if (userSubscriptions[i].merchantAddress == merchantAddress && userSubscriptions[i].status == true) {
-                IERC20(tokenAddress).transfer(merchantAddress, amount);
+                IERC20(usde).transfer(merchantAddress, amount);
             }
         }
     }
