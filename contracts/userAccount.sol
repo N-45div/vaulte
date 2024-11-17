@@ -42,9 +42,18 @@ contract UserAccount is Ownable{
         userSubscriptions[_subscriptionCount.current()].tier = tier;
         userSubscriptions[_subscriptionCount.current()].status = true;
 
-        if (paymentDue >= block.timestamp) {
+        if (paymentDue <= block.timestamp) {
             uint256 price = IMerchant(merchantAddress).getPrice(tier);
             IERC20(usde).transfer(merchantAddress, price);
+        }
+    }
+
+    function unsubscribe(address merchantAddress) external onlyOwner() {
+        for (uint256 i = 0; i < _subscriptionCount.current(); i++) {
+            if (userSubscriptions[i].merchantAddress == merchantAddress) {
+                userSubscriptions[i].status = false;
+                break;
+            }
         }
     }
 

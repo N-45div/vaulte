@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./userAccount.sol";
 import "./MerchantAccount.sol";
 import "./InvestorAccount.sol";
-contract UserAccountFactory is Ownable {
+contract UserFactory is Ownable {
 
     address public routerAddress;
     address public usde;

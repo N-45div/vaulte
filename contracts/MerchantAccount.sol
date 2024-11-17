@@ -103,13 +103,24 @@ contract MerchantAccount is Ownable {
     }
 
     function makeRequest(uint256 loanAmount, uint256 interest, uint256 loanPeriod) external onlyOwner {
-        currentLoanRequest.investor = address(0);
-        currentLoanRequest.loanAmount = loanAmount;
-        currentLoanRequest.interest = interest;
-        currentLoanRequest.repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
-        currentLoanRequest.repaidAmount = 0;
-        currentLoanRequest.loanPeriod = loanPeriod;
-        currentLoanRequest.monthlyRepaymentAmount = (((interest / 100) * loanAmount) + loanAmount) / loanPeriod;
+        // Input validation
+        require(loanAmount > 0, "Loan amount must be greater than 0");
+        require(loanPeriod > 0, "Loan period must be greater than 0");
+        require(interest <= 10, "Interest rate must be less than or equal to 10");
+        
+        // Calculate total repayment amount (principal + interest)
+        uint256 interestAmount = (loanAmount * interest) / 100;
+        uint256 totalRepayment = loanAmount + interestAmount;
+        
+        currentLoanRequest = loanRequest({
+            investor: address(0),
+            loanAmount: loanAmount,
+            interest: interest,
+            repaymentAmount: totalRepayment,
+            repaidAmount: 0,
+            loanPeriod: loanPeriod,
+            monthlyRepaymentAmount: totalRepayment / loanPeriod
+        });
     }
 
     function receiveLoan(address investor) external onlyRouter {
@@ -137,7 +148,7 @@ contract MerchantAccount is Ownable {
         IERC20(usde).transfer(currentLoan.investor, amount);
     }
 
-    function getPaymentAmount(uint256 subPrice) internal view returns(uint256 repaymentAmountPerSub) {
+    function getPaymentAmount(uint256 subPrice) public view returns(uint256 repaymentAmountPerSub) {
        uint256 mrr = getMRR();
        uint256 rpa = currentLoan.repaymentAmount / currentLoan.loanPeriod;
        uint256 rpp = (rpa / mrr) * 100;

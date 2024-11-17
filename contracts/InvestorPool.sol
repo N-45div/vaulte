@@ -42,11 +42,12 @@ contract InvestorPool is Ownable {
         loanPeriod = _loanPeriod;
     }
 
-    function contribute(address investorAccount, uint256 amount) external onlyRouter() {
+    function contribute(address investorAccount, uint256 amount) external {
         investors[investorAccount] = amount;
+        investmentAmount = investmentAmount + amount;
     }
 
-    function redeem(address investorAccount) external onlyRouter() {
+    function redeem(address investorAccount) external {
         uint256 poolBalance = IERC20(usde).balanceOf(address(this));
         uint256 investorPercentage = (investors[investorAccount] / investmentAmount) * 100;
         uint256 payoutAmount = (investorPercentage / 100) * poolBalance;

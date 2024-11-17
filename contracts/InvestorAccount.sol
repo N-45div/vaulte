@@ -71,17 +71,36 @@ contract InvestorAccount is Ownable{
         loans[_loanCount.current()].loanPeriod = offers[offerId].loanPeriod;
         loans[_loanCount.current()].monthlyRepaymentAmount = offers[offerId].monthlyRepaymentAmount;
 
-        IERC20(usde).transfer(routerAddress, offers[offerId].loanAmount);
+        IERC20(usde).transfer(merchant, offers[offerId].loanAmount);
         _loanCount.increment();
     }
 
-    function acceptRequest(address merchant, uint256 loanAmount, uint256 interest, uint256 loanPeriod, uint256 monthlyRepaymentAmount) external onlyRouter() {
-        loans[_loanCount.current()].merchant = merchant;
-        loans[_loanCount.current()].repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
-        loans[_loanCount.current()].repaidAmount = 0;
-        loans[_loanCount.current()].loanPeriod = loanPeriod;
-        loans[_loanCount.current()].monthlyRepaymentAmount = monthlyRepaymentAmount;
+    function acceptRequest(
+        address merchant,
+        uint256 loanAmount,
+        uint256 interest,
+        uint256 loanPeriod,
+        uint256 monthlyRepaymentAmount
+    ) external onlyRouter {
+        // Input validation
+        require(merchant != address(0), "Invalid merchant address");
+        require(loanAmount > 0, "Loan amount must be positive");
+        require(loanPeriod > 0, "Loan period must be positive");
+        require(monthlyRepaymentAmount > 0, "Monthly repayment must be positive");
+        
+        uint256 currentLoanId = _loanCount.current();
+        uint256 totalRepayment = loanAmount + ((interest * loanAmount) / 100);
 
+        // Create new loan
+        loans[currentLoanId] = loan({
+            merchant: merchant,
+            repaymentAmount: totalRepayment,
+            repaidAmount: 0,
+            loanPeriod: loanPeriod,
+            monthlyRepaymentAmount: monthlyRepaymentAmount
+        });
+
+        // Transfer funds and increment counter
         IERC20(usde).transfer(routerAddress, loanAmount);
         _loanCount.increment();
     }

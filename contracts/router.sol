@@ -19,7 +19,9 @@ contract Router is Ownable{
     event SubscriptionPayment(address userAccount, address merchantAccount, uint256 paymentAmount, uint256 paymentTime);
     event LoanDisbursed(address investorAccount, address merchantAccount, uint256 amount, uint8 loanCategory);
 
-    constructor(address _userFactoryAddress) Ownable(msg.sender) {
+    constructor() Ownable(msg.sender) {}
+
+    function setFactory(address _userFactoryAddress) onlyOwner external {
         userFactoryAddress = _userFactoryAddress;
     }
 
@@ -70,6 +72,4 @@ contract Router is Ownable{
         IUser(userAccount).paySubscription(amount, merchantAccount);
         emit SubscriptionPayment(userAccount, merchantAccount, amount, block.timestamp);
     }
-
-
 }
