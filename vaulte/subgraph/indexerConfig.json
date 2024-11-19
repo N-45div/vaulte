@@ -2,6 +2,54 @@
     "version": "1",
     "name": "vaulte",
     "abis": {
-        "router": "./abis/router.json"
-    }
+        "router": {
+            "path": "./abis/router.json"
+        }
+    },
+    "chains": ["ethena-testnet"],
+    "instances": [
+        {
+            "abi": "router",
+            "address": "YOUR_DEPLOYED_CONTRACT_ADDRESS",
+            "chain": "ethena-testnet",
+            "startBlock": "DEPLOYMENT_BLOCK_NUMBER",
+            "enrich": {
+                "handlers": {
+                    "Subscription(address,address,uint256,uint256)": {
+                        "entities": {
+                            "Subscription": {
+                                "userAccount address": "event.params.userAccount.toHexString()",
+                                "merchantAccount address": "event.params.merchantAccount.toHexString()",
+                                "tier uint256": "event.params.tier",
+                                "subscriptionTime uint256": "event.params.subTime",
+                                "timestamp_ uint256": "event.block.timestamp"
+                            }
+                        }
+                    },
+                    "SubscriptionPayment(address,address,uint256,uint256)": {
+                        "entities": {
+                            "Payment": {
+                                "userAccount address": "event.params.userAccount.toHexString()",
+                                "merchantAccount address": "event.params.merchantAccount.toHexString()",
+                                "amount uint256": "event.params.paymentAmount",
+                                "paymentTime uint256": "event.params.paymentTime",
+                                "timestamp_ uint256": "event.block.timestamp"
+                            }
+                        }
+                    },
+                    "LoanDisbursed(address,address,uint256,uint8)": {
+                        "entities": {
+                            "Loan": {
+                                "investorAccount address": "event.params.investorAccount.toHexString()",
+                                "merchantAccount address": "event.params.merchantAccount.toHexString()",
+                                "amount uint256": "event.params.amount",
+                                "loanCategory uint8": "event.params.loanCategory",
+                                "timestamp_ uint256": "event.block.timestamp"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
 }
