@@ -2,46 +2,48 @@
 import { HoveredLink, Menu, MenuItem } from "./components/ui/navbar-menu";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount, useDisconnect } from 'wagmi';
 
 
 const Home: React.FC = () => {
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [active, setActive] = useState(null);
-
-  const handleConnectWallet = () => {
-    setWalletConnected(true);
-  };
+  const { isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const [active, setActive] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-gray-800 text-white font-sans">
       <header className="flex justify-between items-center px-8 py-6">
         <h1 className="text-3xl font-bold text-blue-400">Vaulte</h1>
-        <div className="flex space-x-4">
-          {!walletConnected ? (
-            <button
-              onClick={handleConnectWallet}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white font-semibold"
-            >
-              Connect Wallet
-            </button>
+        <div className="flex items-center space-x-4">
+          {!isConnected ? (
+            <ConnectButton />
           ) : (
-            <>
-               <Menu setActive={setActive}>
-                <MenuItem setActive={setActive} active={active} item="Dashboard">
+            <Menu setActive={setActive}>
+              <MenuItem setActive={setActive} active={active} item="Dashboard">
                 <div className="flex flex-col space-y-4 text-sm">
-                    <HoveredLink href="/user">User</HoveredLink>
-                    <HoveredLink href="/merchant">Merchant</HoveredLink>
-                    <HoveredLink href="/investor">Investor</HoveredLink>
+                  <HoveredLink href="/user">User</HoveredLink>
+                  <HoveredLink href="/merchant">Merchant</HoveredLink>
+                  <HoveredLink href="/investor">Investor</HoveredLink>
                 </div>
-                </MenuItem>
-                <MenuItem setActive={setActive} active={active} item="Explore">
+              </MenuItem>
+              <MenuItem setActive={setActive} active={active} item="Explore">
                 <div className="flex flex-col space-y-4 text-sm">
-                    <HoveredLink href="/loans">Loans</HoveredLink>
-                    <HoveredLink href="/create">Create</HoveredLink>
+                  <HoveredLink href="/loans">Loans</HoveredLink>
+                  <HoveredLink href="/create">Create</HoveredLink>
                 </div>
-                </MenuItem>
-              </Menu>
-            </>
+              </MenuItem>
+              <MenuItem setActive={setActive} active={active} item="Account">
+                <div className="flex flex-col space-y-4 text-sm">
+                  <button 
+                    onClick={() => disconnect()}
+                    className="text-left text-red-400 hover:text-red-300"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </MenuItem>
+            </Menu>
           )}
         </div>
       </header>
