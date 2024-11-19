@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./InvestorPool.sol";
-contract UserAccountFactory is Ownable {
+contract PoolFactory is Ownable {
     /**
      * @notice Utilizing OpenZeppelin's Counters library for managing counters, which includes functions like increment, decrement, and reset.
      */
