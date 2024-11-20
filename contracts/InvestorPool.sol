@@ -42,7 +42,7 @@ contract InvestorPool is Ownable {
         loanPeriod = _loanPeriod;
     }
 
-    function contribute(address investorAccount, uint256 amount) external {
+    function contribute(address investorAccount, uint256 amount) external onlyRouter() {
         investors[investorAccount] = amount;
         investmentAmount = investmentAmount + amount;
     }

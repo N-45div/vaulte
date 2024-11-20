@@ -8,11 +8,13 @@ import "./Interfaces/IUser.sol";
 import "./Interfaces/IUserFactory.sol";
 import "./Interfaces/IInvestor.sol";
 import "./Interfaces/IInvestorPool.sol";
+import "./Interfaces/IInvestorPoolFactory.sol";
 
 // import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract Router is Ownable{
 
+    address public userFactoryAddress;
     address public userFactoryAddress;
 
     event Subscription(address userAccount, address merchantAccount, uint256 tier, uint256 subTime);
@@ -21,7 +23,7 @@ contract Router is Ownable{
 
     constructor() Ownable(msg.sender) {}
 
-    function setFactory(address _userFactoryAddress) onlyOwner external {
+    function setFactory(address _userFactoryAddress, ) onlyOwner external {
         userFactoryAddress = _userFactoryAddress;
     }
 
@@ -71,5 +73,10 @@ contract Router is Ownable{
     function charge(address userAccount, address merchantAccount, uint256 amount) external {
         IUser(userAccount).paySubscription(amount, merchantAccount);
         emit SubscriptionPayment(userAccount, merchantAccount, amount, block.timestamp);
+    }
+
+    function contributePool(address investorPool, uint256 amount) external {
+        
+        IInvestorPool(investorPool).
     }
 }
