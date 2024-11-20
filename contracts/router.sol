@@ -15,7 +15,6 @@ import "./Interfaces/IInvestorPoolFactory.sol";
 contract Router is Ownable{
 
     address public userFactoryAddress;
-    address public userFactoryAddress;
 
     event Subscription(address userAccount, address merchantAccount, uint256 tier, uint256 subTime);
     event SubscriptionPayment(address userAccount, address merchantAccount, uint256 paymentAmount, uint256 paymentTime);
@@ -23,7 +22,7 @@ contract Router is Ownable{
 
     constructor() Ownable(msg.sender) {}
 
-    function setFactory(address _userFactoryAddress, ) onlyOwner external {
+    function setFactory(address _userFactoryAddress) onlyOwner external {
         userFactoryAddress = _userFactoryAddress;
     }
 
@@ -76,7 +75,8 @@ contract Router is Ownable{
     }
 
     function contributePool(address investorPool, uint256 amount) external {
-        
-        IInvestorPool(investorPool).
+        address investorAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        IInvestor(investorAccount).contributePool(investorPool, amount);
+        IInvestorPool(investorPool).contribute(investorAccount, amount);
     }
 }

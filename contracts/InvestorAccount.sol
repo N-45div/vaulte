@@ -105,6 +105,10 @@ contract InvestorAccount is Ownable{
         _loanCount.increment();
     }
 
+    function contributePool(address pool, uint256 amount) external onlyRouter() {
+        IERC20(usde).transfer(pool, amount);
+    }
+
     modifier onlyRouter() {
         require(msg.sender == routerAddress, "No Permision to Call Function");
         _;
