@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useAccount, useDisconnect } from 'wagmi';
 
-
 const Home: React.FC = () => {
   const { isConnected } = useAccount();
   const { disconnect } = useDisconnect();

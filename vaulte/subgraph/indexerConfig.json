@@ -3,7 +3,7 @@
     "name": "vaulte",
     "abis": {
         "router": {
-            "path": "./abis/router.json"
+            "path": "abis/router.json"
         }
     },
     "chains": ["ethena-testnet"],
@@ -12,39 +12,39 @@
             "abi": "router",
             "address": "0x595CeE49356f6260D9D3290f7C052183260314ef",
             "chain": "ethena-testnet",
-            "startBlock": "1539807",
+            "startBlock": 1539807,
             "enrich": {
                 "handlers": {
                     "Subscription(address,address,uint256,uint256)": {
                         "entities": {
                             "Subscription": {
-                                "userAccount address": "event.params.userAccount.toHexString()",
-                                "merchantAccount address": "event.params.merchantAccount.toHexString()",
-                                "tier uint256": "event.params.tier",
-                                "subscriptionTime uint256": "event.params.subTime",
-                                "timestamp_ uint256": "event.block.timestamp"
+                                "userAccount": "event.params.userAccount.toHexString()",
+                                "merchantAccount": "event.params.merchantAccount.toHexString()",
+                                "tier": "event.params.tier",
+                                "subscriptionTime": "event.params.subTime",
+                                "timestamp": "event.block.timestamp"
                             }
                         }
                     },
                     "SubscriptionPayment(address,address,uint256,uint256)": {
                         "entities": {
                             "Payment": {
-                                "userAccount address": "event.params.userAccount.toHexString()",
-                                "merchantAccount address": "event.params.merchantAccount.toHexString()",
-                                "amount uint256": "event.params.paymentAmount",
-                                "paymentTime uint256": "event.params.paymentTime",
-                                "timestamp_ uint256": "event.block.timestamp"
+                                "userAccount": "event.params.userAccount.toHexString()",
+                                "merchantAccount": "event.params.merchantAccount.toHexString()",
+                                "amount": "event.params.paymentAmount",
+                                "paymentTime": "event.params.paymentTime",
+                                "timestamp": "event.block.timestamp"
                             }
                         }
                     },
                     "LoanDisbursed(address,address,uint256,uint8)": {
                         "entities": {
                             "Loan": {
-                                "investorAccount address": "event.params.investorAccount.toHexString()",
-                                "merchantAccount address": "event.params.merchantAccount.toHexString()",
-                                "amount uint256": "event.params.amount",
-                                "loanCategory uint8": "event.params.loanCategory",
-                                "timestamp_ uint256": "event.block.timestamp"
+                                "investorAccount": "event.params.investorAccount.toHexString()",
+                                "merchantAccount": "event.params.merchantAccount.toHexString()",
+                                "amount": "event.params.amount",
+                                "loanCategory": "BigInt.fromI32(event.params.loanCategory)",
+                                "timestamp": "event.block.timestamp"
                             }
                         }
                     }
