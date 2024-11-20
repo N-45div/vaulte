@@ -108,6 +108,11 @@ export const acceptOffer = async(signer, investorAccount, offerId) => {
     }
 }
 
-export const contributePool = async (poolId, ) => {
+export const contributePool = async (signer, amount, poolId) => {
+    // get Pool Factory
+    // get pool Address
+    const poolFactoryConract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
+    const poolAddress = await poolFactoryConract.getPoolAddress(poolId);
+    
     
 }
