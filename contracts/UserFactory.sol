@@ -5,7 +5,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./userAccount.sol";
 import "./MerchantAccount.sol";
 import "./InvestorAccount.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+
 contract UserFactory is Ownable {
+
+    using Counters for Counters.Counter;
+    Counters.Counter public _userCount;
 
     address public routerAddress;
     address public usde;
@@ -17,6 +22,7 @@ contract UserFactory is Ownable {
     }
 
     mapping (address => user) public users;
+    mapping (uint256 => user) public userType;
 
     constructor(address _routerAddress, address usdeAddress) Ownable(msg.sender) {
         routerAddress = _routerAddress;
@@ -27,19 +33,19 @@ contract UserFactory is Ownable {
         require(users[msg.sender].userAddress == address(0), "Already have an account");
         if (role == 0) {
             UserAccount newUser = new UserAccount(routerAddress, usde, msg.sender);
-            users[msg.sender].userName = userName;
-            users[msg.sender].userAddress = address(newUser);
-            users[msg.sender].role = "user";
+            users[msg.sender] = user(userName, address(newUser), "user");
+            userType[_userCount.current()] = user(userName, address(newUser), "user");
+            _userCount.increment();
         } else if (role == 1) {
             MerchantAccount newMerchant = new MerchantAccount(routerAddress, usde, msg.sender);
-            users[msg.sender].userName = userName;
-            users[msg.sender].userAddress = address(newMerchant);
-            users[msg.sender].role = "merchant";
+            users[msg.sender] = user(userName, address(newMerchant), "merchant");
+            userType[_userCount.current()] = user(userName, address(newMerchant), "merchant");
+            _userCount.increment();
         } else {
             InvestorAccount newInvestor = new InvestorAccount(routerAddress, usde, msg.sender);
-            users[msg.sender].userName = userName;
-            users[msg.sender].userAddress = address(newInvestor);
-            users[msg.sender].role = "investor";
+            users[msg.sender] = user(userName, address(newInvestor), "investor");
+            userType[_userCount.current()] = user(userName, address(newInvestor), "investor");
+            _userCount.increment();
         }
     }
 
