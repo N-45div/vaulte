@@ -40,5 +40,47 @@ export const poolFactoryABI = [
         ],
         "stateMutability": "view",
         "type": "function"
-      }
+    },
+    {
+        "inputs": [],
+        "name": "_poolCount",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "_value",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }, 
+    {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "pools",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "poolName",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "poolAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
 ]

@@ -4,6 +4,7 @@ import { userFactoryABI } from "./Contract-Artifacts/UserFactory";
 import { ethenaProvider } from "./provider";
 import { merchantAccountABI } from "./Contract-Artifacts/merchantAccount";
 import { investorAccountABI } from "./Contract-Artifacts/InvestorAccount";
+import { poolFactoryABI } from "./Contract-Artifacts/poolFactory";
 interface LoanRequestInfo {
     merchantAddress: string;
     merchantName: string;
@@ -85,7 +86,13 @@ export const fetchLoanOffers = async () => {
 
 export const fetchLoanPools = async () => {
     try {
-        
+        const poolFactoryContract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, ethenaProvider);
+        const poolCount = await poolFactoryContract._poolCount();
+
+        for (let i = 0; i < poolCount; i++) {
+            const pool = await poolFactoryContract.pools(i);
+            const loanPool: LoanPoolInfo = (pool[0], )
+        }
     } catch (error) {
         console.log(error);
     }
