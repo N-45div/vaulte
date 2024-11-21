@@ -22,6 +22,7 @@ contract PoolFactory is Ownable {
         string poolName;
         address poolAddress;
         address owner;
+        uint256 interest;
     }
 
     mapping (uint256 => pool) public pools;
@@ -36,6 +37,7 @@ contract PoolFactory is Ownable {
         pools[_poolCount.current()].poolName = poolName;
         pools[_poolCount.current()].poolAddress = address(newPool);
         pools[_poolCount.current()].owner = msg.sender;
+        pools[_poolCount.current()].interest = interest;
         _poolCount.increment();
     }
 
