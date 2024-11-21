@@ -3,11 +3,12 @@ const { ethers } = require("ethers");
 import { Addresses } from "./Contract-Artifacts/Addresses";
 import { investorAccountABI } from "./Contract-Artifacts/InvestorAccount";
 import { merchantAccountABI } from "./Contract-Artifacts/merchantAccount";
+import { poolABI } from "./Contract-Artifacts/Pool";
 import { poolFactoryABI } from "./Contract-Artifacts/poolFactory";
 import { routerABI } from "./Contract-Artifacts/Router";
 import { userFactoryABI } from "./Contract-Artifacts/UserFactory";
 
-export const createRequest = async(signer, loanAmount, interest, loanPeriod) => {
+export const createLoanRequest = async(signer, loanAmount, interest, loanPeriod) => {
     try {
         const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
         const merchantAccountAddress = await userFactoryContract.getAccountAddress(signer.address);
@@ -29,7 +30,7 @@ export const createRequest = async(signer, loanAmount, interest, loanPeriod) => 
     }
 }
 
-export const createOffer = async(signer, loanAmount, interest, loanPeriod) => {
+export const createLoanOffer = async(signer, loanAmount, interest, loanPeriod) => {
     try {
         const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
         const investorAccountAddress = await userFactoryContract.getAccountAddress(signer.address);
@@ -51,7 +52,7 @@ export const createOffer = async(signer, loanAmount, interest, loanPeriod) => {
     }
 }
 
-export const createPool = async(signer, poolName, startAmount, interest, loanPeriod) => {
+export const createLoanPool = async(signer, poolName, startAmount, interest, loanPeriod) => {
     try {
         const poolFactoryContract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
         const createPoolTx = await poolFactoryContract.createPool(poolName, interest, loanPeriod);
@@ -109,10 +110,48 @@ export const acceptOffer = async(signer, investorAccount, offerId) => {
 }
 
 export const contributePool = async (signer, amount, poolId) => {
-    // get Pool Factory
-    // get pool Address
-    const poolFactoryConract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
-    const poolAddress = await poolFactoryConract.getPoolAddress(poolId);
-    
-    
+    try {
+        const poolFactoryConract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
+        const poolAddress = await poolFactoryConract.getPoolAddress(poolId);
+        
+        const routerContract = new ethers.Contract(Addresses.router, routerABI, signer);
+        const contributeTx = await routerContract.contributePool(poolAddress, amount);
+        const receipt = await contributeTx.wait();
+
+        if (receipt.status === 1) {
+            console.log('pool funded');
+            return true;
+        } else {
+            console.error("Transaction failed!");
+            return false;
+        }
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export const getPoolLoan = async (signer, amount, loanPeriod) => {
+    try {
+        const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
+        const merchantAccount = await userFactoryContract.getAccountAddress(signer.address);
+
+        const poolFactoryConract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
+        const poolAddress = await poolFactoryConract.getPoolAddress(poolId);
+        
+        const poolContract = new ethers.Contract(poolAddress, poolABI, signer);
+        const getLoanTx = await poolContract.getLoan(merchantAccount, amount, loanPeriod);
+        const receipt = await getLoanTx.wait();
+
+        if (receipt.status === 1) {
+            console.log('loan gotten');
+            return true;
+        } else {
+            console.error("Transaction failed!");
+            return false;
+        }
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
 }

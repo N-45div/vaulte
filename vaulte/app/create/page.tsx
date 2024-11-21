@@ -1,12 +1,71 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useAccount } from "wagmi";
+import { useEthersSigner } from "../../utils/ethersAdapter";
+import { createLoanOffer, createLoanPool, createLoanRequest } from "../../utils/app";
 
 const CreatePage: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState<'request' | 'offer' | 'pool'>('request');
   const [amount, setAmount] = useState<number>(0);
+  const [poolName, setPoolName] = useState<string>("");
   const [repaymentPeriod, setRepaymentPeriod] = useState<number>(0);
   const [interest, setInterest] = useState<number>(0);
+
+  const { address, isConnected, chain, chainId } = useAccount();
+  const signer = useEthersSigner();
+
+  const createRequest = async() => {
+    try {
+      console.log(selectedTab, amount, repaymentPeriod, interest);
+      const result = await createLoanRequest(signer, amount, interest, repaymentPeriod);
+      if (result === true) {
+        // display success toast
+      } else {
+        // display error toast
+      }
+    } catch (error) {
+      // display error toast
+    }
+  }
+
+  const createOffer = async() => {
+    try {
+      console.log(selectedTab, amount, repaymentPeriod, interest);
+      const result = await createLoanOffer(signer, amount, interest, repaymentPeriod);
+      if (result === true) {
+        // display success toast
+      } else {
+        // display error toast
+      }
+    } catch (error) {
+      // display error toast
+    }
+  }
+
+  const createPool = async() => {
+    try {
+      console.log(selectedTab, poolName, amount, repaymentPeriod, interest);
+      const result = await createLoanPool(signer, poolName, amount, interest, repaymentPeriod);
+      if (result === true) {
+        // display success toast
+      } else {
+        // display error toast
+      }
+    } catch (error) {
+      // display error toast
+    }
+  }
+
+  const submit = async() => {
+      if (selectedTab === "request") {
+        await createRequest();
+      } else if (selectedTab === "offer") {
+        await createOffer();
+      } else {
+        await createPool();
+      }
+  }  
 
   const handleTabChange = (tab: 'request' | 'offer' | 'pool') => {
     setSelectedTab(tab);
