@@ -89,9 +89,12 @@ export const fetchLoanPools = async () => {
         const poolFactoryContract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, ethenaProvider);
         const poolCount = await poolFactoryContract._poolCount();
 
+        let allPools: LoanPoolInfo[] = [];
+
         for (let i = 0; i < poolCount; i++) {
             const pool = await poolFactoryContract.pools(i);
-            const loanPool: LoanPoolInfo = (pool[0], )
+            const loanPool: LoanPoolInfo = (pool[0], pool[3], pool[1]);
+            allPools.push(loanPool);
         }
     } catch (error) {
         console.log(error);

@@ -78,9 +78,14 @@ export const poolFactoryABI = [
             "internalType": "address",
             "name": "owner",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "interest",
+            "type": "uint256"
           }
         ],
         "stateMutability": "view",
         "type": "function"
-    }
+      }
 ]
