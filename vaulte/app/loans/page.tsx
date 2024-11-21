@@ -1,9 +1,57 @@
 "use client";
 
 import React, { useState } from 'react';
+import { LoanOfferInfo, LoanRequestInfo, LoanPoolInfo } from "../../utils/AppFetch";
+import { fundRequest, acceptOffer, loanPoolAction } from "../../utils/app";
+import { useAccount } from "wagmi";
+import { useEthersSigner } from "../../utils/ethersAdapter";
 
 const LoansPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('requests');
+
+  const signer = useEthersSigner();
+
+  const fundLoanRequest = async (merchantAddress: string) => {
+    try {
+      const result = await fundRequest(signer, merchantAddress);
+      if (result === true) {
+        // display success toast
+      } else {
+        // display error toast
+      }
+    } catch (error) {
+      console.log(error);
+      // display error toast
+    }
+  }
+
+  const acceptLoanOffer = async (investorAddress: string, offerId: number) => {
+    try {
+      const result = await acceptOffer(signer, investorAddress, offerId);
+      if (result === true) {
+        // display success toast
+      } else {
+        // display error toast
+      }
+    } catch (error) {
+      console.log(error);
+      // display error toast
+    }
+  }
+
+  const poolAction = async (amount: number, poolId: number) => {
+    try {
+      const result = await loanPoolAction(signer, amount, poolId);
+      if (result === true) {
+        // display success toast
+      } else {
+        // display error toast
+      }
+    } catch (error) {
+      console.log(error);
+      // display error toast
+    }
+  }
 
   const renderContent = () => {
     switch (activeTab) {

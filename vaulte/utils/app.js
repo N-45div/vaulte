@@ -7,6 +7,7 @@ import { poolABI } from "./Contract-Artifacts/Pool";
 import { poolFactoryABI } from "./Contract-Artifacts/poolFactory";
 import { routerABI } from "./Contract-Artifacts/Router";
 import { userFactoryABI } from "./Contract-Artifacts/UserFactory";
+import { ethenaProvider } from "./provider";
 
 export const createLoanRequest = async(signer, loanAmount, interest, loanPeriod) => {
     try {
@@ -58,9 +59,17 @@ export const createLoanPool = async(signer, poolName, startAmount, interest, loa
         const createPoolTx = await poolFactoryContract.createPool(poolName, interest, loanPeriod);
         const receipt = await createPoolTx.wait();
 
+        const poolCount = await poolFactoryContract._poolCount();
+        const poolId = poolCount - 1;
+
         if (receipt.status === 1) {
             console.log('pool created');
-            return true;
+            const result = await contributePool(signer, startAmount, poolId);
+            if (result === true) {
+                return true;
+            } else {
+                return false;
+            }
         } else {
             console.error("Transaction failed!");
             return false;
@@ -109,7 +118,7 @@ export const acceptOffer = async(signer, investorAccount, offerId) => {
     }
 }
 
-export const contributePool = async (signer, amount, poolId) => {
+const contributePool = async (signer, amount, poolId) => {
     try {
         const poolFactoryConract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
         const poolAddress = await poolFactoryConract.getPoolAddress(poolId);
@@ -131,7 +140,7 @@ export const contributePool = async (signer, amount, poolId) => {
     }
 }
 
-export const getPoolLoan = async (signer, amount, loanPeriod) => {
+const getPoolLoan = async (signer, amount, poolId, loanPeriod) => {
     try {
         const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
         const merchantAccount = await userFactoryContract.getAccountAddress(signer.address);
@@ -152,6 +161,32 @@ export const getPoolLoan = async (signer, amount, loanPeriod) => {
         }
     } catch (error) {
         console.error(error);
+        return false;
+    }
+}
+
+export const loanPoolAction = async (signer, amount, poolId) => {
+    try {
+        const userFactoryContract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, ethenaProvider);
+        const user = await userFactoryContract.users(signer.address);
+        console.log(user);
+        if (user[2] === "investor") {
+            const result = await contributePool(signer, amount, poolId);
+            if (result === true) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (user[2] === "investor") {
+            const result = await getPoolLoan(signer, amount, poolId, 6);
+            if (result === true) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } catch (error) {
+        console.log(error);        
         return false;
     }
 }

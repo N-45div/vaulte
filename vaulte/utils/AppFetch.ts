@@ -5,7 +5,7 @@ import { ethenaProvider } from "./provider";
 import { merchantAccountABI } from "./Contract-Artifacts/merchantAccount";
 import { investorAccountABI } from "./Contract-Artifacts/InvestorAccount";
 import { poolFactoryABI } from "./Contract-Artifacts/poolFactory";
-interface LoanRequestInfo {
+export interface LoanRequestInfo {
     merchantAddress: string;
     merchantName: string;
     merchantMRR: number;
@@ -14,7 +14,7 @@ interface LoanRequestInfo {
     interest: number;
 }
 
-interface LoanOfferInfo {
+export interface LoanOfferInfo {
     investorAddress: string;
     investorName: string;
     offerId: number;
@@ -23,7 +23,7 @@ interface LoanOfferInfo {
     interest: number;
 }
 
-interface LoanPoolInfo {
+export interface LoanPoolInfo {
     poolName: string;
     interest: number;
     poolAddress: string;

@@ -12,7 +12,6 @@ const CreatePage: React.FC = () => {
   const [repaymentPeriod, setRepaymentPeriod] = useState<number>(0);
   const [interest, setInterest] = useState<number>(0);
 
-  const { address, isConnected, chain, chainId } = useAccount();
   const signer = useEthersSigner();
 
   const createRequest = async() => {

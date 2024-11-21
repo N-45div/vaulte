@@ -59,5 +59,34 @@ export const userFactoryABI = [
         ],
         "stateMutability": "view",
         "type": "function"
-      }
+    }, 
+    {
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "name": "users",
+        "outputs": [
+          {
+            "internalType": "string",
+            "name": "userName",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "userAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "role",
+            "type": "string"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
 ]
