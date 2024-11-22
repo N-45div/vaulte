@@ -2,9 +2,9 @@
     "version": "1",
     "name": "vaulte",
     "abis": {
-        "router": {
-            "path": "abis/router.json"
-        }
+      "router": {
+        "path": "./Router.json"
+      }
     },
     "chains": ["ethena-testnet"],
     "instances": [
@@ -14,6 +14,9 @@
             "chain": "ethena-testnet",
             "startBlock": 1539807,
             "enrich": {
+                "options": {
+                  "imports": ["BigDecimal"]
+                },
                 "handlers": {
                     "Subscription(address,address,uint256,uint256)": {
                         "entities": {
