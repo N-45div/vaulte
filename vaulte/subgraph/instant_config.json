@@ -1,0 +1,60 @@
+{
+    "version": "1",
+    "name": "USDe",
+    "abis": {
+      "Token": {
+        "path": "./erc20.json"
+      }
+    },
+    "chains": ["ethena-testnet"],
+    "instances": [
+      {
+        "abi": "Token",
+        "address": "0x426E7d03f9803Dd11cb8616C65b99a3c0AfeA6dE",
+        "chain": "ethena-testnet",
+        "startBlock": 1539807,
+        "enrich": {
+          "options": {
+            "imports": ["BigDecimal"]
+          },
+          "handlers": {
+            "Transfer(indexed address,indexed address,uint256)": {
+              "calls": {
+                "balance_from": {
+                  "name": "balanceOf",
+                  "params": "event.params.from"
+                },
+                "balance_to": {
+                  "name": "balanceOf",
+                  "params": "event.params.to"
+                }
+              },
+              "entities": {
+                "Balances": [
+                  {
+                    "id": "event.address.toHexString() + '-' + event.params.from.toHexString()",
+                    "explicit_id": true,
+                    "mapping": {
+                      "contract_address address": "event.address.toHexString()",
+                      "owner_address address": "event.params.from.toHexString()",
+                      "balance fixed": "calls.balance_from === null ? BigDecimal.zero() : calls.balance_from!.divDecimal(BigDecimal.fromString('1e18'))"
+                    }
+                  },
+                  {
+                    "id": "event.address.toHexString() + '-' + event.params.to.toHexString()",
+                    "explicit_id": true,
+                    "mapping": {
+                      "contract_address address": "event.address.toHexString()",
+                      "owner_address address": "event.params.to.toHexString()",
+                      "balance fixed": "calls.balance_to === null ? BigDecimal.zero() : calls.balance_to!.divDecimal(BigDecimal.fromString('1e18'))"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+  
