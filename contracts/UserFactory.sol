@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.27;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./userAccount.sol";
 import "./MerchantAccount.sol";
 import "./InvestorAccount.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract UserFactory is Ownable {
+contract UserFactory {
 
     using Counters for Counters.Counter;
     Counters.Counter public _userCount;
@@ -24,7 +23,7 @@ contract UserFactory is Ownable {
     mapping (address => user) public users;
     mapping (uint256 => user) public userType;
 
-    constructor(address _routerAddress, address usdeAddress) Ownable(msg.sender) {
+    constructor(address _routerAddress, address usdeAddress) {
         routerAddress = _routerAddress;
         usde = usdeAddress;
     }
