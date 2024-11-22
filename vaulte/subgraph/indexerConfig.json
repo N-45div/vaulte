@@ -35,8 +35,7 @@
                                 "userAccount": "event.params.userAccount.toHexString()",
                                 "merchantAccount": "event.params.merchantAccount.toHexString()",
                                 "amount": "event.params.paymentAmount",
-                                "paymentTime": "event.params.paymentTime",
-                                "timestamp": "event.params.timestamp"
+                                "paymentTime": "event.params.subTime"
                             }
                         }
                     },
@@ -46,8 +45,7 @@
                                 "investorAccount": "event.params.investorAccount.toHexString()",
                                 "merchantAccount": "event.params.merchantAccount.toHexString()",
                                 "amount": "event.params.amount",
-                                "loanCategory": "event.params.loanCategory",
-                                "timestamp": "event.params.timestamp"
+                                "loanCategory": "event.params.loanCategory"
                             }
                         }
                     }
