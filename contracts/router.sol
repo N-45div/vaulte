@@ -33,14 +33,13 @@ contract Router is Ownable{
     address public merchantFactoryAddress;
 
     /// @notice Emitted when a new subscription is created
-    /// @param subscriptionId Unique identifier for the subscription
     /// @param userAccount Address of the user's account
     /// @param merchantAccount Address of the merchant's account
     /// @param tier Subscription tier level
     /// @param subTime Timestamp when subscription was created
-    event Sub(uint256 indexed subscriptionId, address userAccount, address merchantAccount, uint256 tier, uint256 subTime);
-    event SubscriptionPayment(uint256 indexed paymentId, address userAccount, address merchantAccount, uint256 paymentAmount, uint256 paymentTime);
-    event LoanDisbursed(uint256 indexed disbursedId, address investorAccount, address merchantAccount, uint256 amount, uint8 loanCategory);
+    event Subscription(address userAccount, address merchantAccount, uint256 tier, uint256 subTime);
+    event SubscriptionPayment(address userAccount, address merchantAccount, uint256 paymentAmount, uint256 paymentTime);
+    event LoanDisbursed(address investorAccount, address merchantAccount, uint256 amount, uint8 loanCategory);
 
     constructor() Ownable(msg.sender) {}
 
@@ -67,9 +66,8 @@ contract Router is Ownable{
         IUser(userAccount).subscribe(tier, paymentDue, merchantAccount);
         IMerchant(merchantAccount).setSubscription(tier, paymentDue, userAccount);
 
-        uint256 subId = subscriptionCount.current();
         subscriptionCount.increment();
-        emit Sub(subId, userAccount, merchantAccount, tier, block.timestamp);
+        emit Subscription(userAccount, merchantAccount, tier, block.timestamp);
     }
 
     /// @notice Allows an investor to fund a merchant's loan request
@@ -81,9 +79,8 @@ contract Router is Ownable{
         IMerchant(merchantAccount).receiveLoan(investorAccount);
         IInvestor(investorAccount).acceptRequest(merchantAccount, loanAmount, interest, loanPeriod, monthlyRepaymentAmount);
         // emit event
-        uint256 disbursedId = disbursedCount.current();
         disbursedCount.increment();
-        emit LoanDisbursed(disbursedId, investorAccount, merchantAccount, loanAmount, 0);
+        emit LoanDisbursed(investorAccount, merchantAccount, loanAmount, 0);
     }
 
     /// @notice Allows a merchant to accept a loan offer from an investor
@@ -95,9 +92,9 @@ contract Router is Ownable{
         uint256 repaymentAmount = monthlyRepaymentAmount * loanPeriod;
         IMerchant(merchantAccount).getLoan(investor, repaymentAmount, loanPeriod, monthlyRepaymentAmount);
         IInvestor(investor).disburseLoanOffer(merchantAccount, offerId);
-        uint256 disbursedId = disbursedCount.current();
+
         disbursedCount.increment();
-        emit LoanDisbursed(disbursedId, investorAccount, merchantAccount, loanAmount, 1);
+        emit LoanDisbursed(investorAccount, merchantAccount, loanAmount, 1);
     }
 
     /// @notice Allows a merchant to get a loan from an investor pool
@@ -111,9 +108,9 @@ contract Router is Ownable{
         uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod;
         IMerchant(merchantAccount).getLoan(investorPool, repaymentAmount, loanPeriod, monthlyRepaymentAmount);
         IInvestorPool(investorPool).getLoan(merchantAccount, loanAmount, loanPeriod);
-        uint256 disbursedId = disbursedCount.current();
+
         disbursedCount.increment();
-        emit LoanDisbursed(disbursedId, investorPool, merchantAccount, loanAmount, 2);
+        emit LoanDisbursed(investorPool, merchantAccount, loanAmount, 2);
     }
 
     /// @notice Processes a subscription payment charge
@@ -123,9 +120,8 @@ contract Router is Ownable{
     function charge(address userAccount, address merchantAccount, uint256 amount) external {
         IUser(userAccount).paySubscription(amount, merchantAccount);
         
-        uint256 paymentId = subscriptionPaymentCount.current();
         subscriptionPaymentCount.increment();
-        emit SubscriptionPayment(paymentId, userAccount, merchantAccount, amount, block.timestamp);
+        emit SubscriptionPayment(userAccount, merchantAccount, amount, block.timestamp);
     }
 
     /// @notice Allows an investor to contribute to an investor pool
