@@ -21,6 +21,8 @@ contract Router is Ownable{
     Counters.Counter public disbursedCount;
 
     address public userFactoryAddress;
+    address public investorFactoryAddress;
+    address public merchantFactoryAddress;
 
     event Subscription(uint256 indexed subscriptionId, address userAccount, address merchantAccount, uint256 tier, uint256 subTime);
     event SubscriptionPayment(uint256 indexed paymentId, address userAccount, address merchantAccount, uint256 paymentAmount, uint256 paymentTime);
@@ -28,8 +30,10 @@ contract Router is Ownable{
 
     constructor() Ownable(msg.sender) {}
 
-    function setFactory(address _userFactoryAddress) onlyOwner external {
+    function setFactory(address _userFactoryAddress, address _investorFactoryAddress, address _merchantFactoryAddress) onlyOwner external {
         userFactoryAddress = _userFactoryAddress;
+        investorFactoryAddress = _investorFactoryAddress;
+        merchantFactoryAddress = _merchantFactoryAddress;
     }
 
     function subscribe(uint8 tier, address merchantAccount) external {
@@ -48,7 +52,7 @@ contract Router is Ownable{
     }
 
     function fundRequest(address merchantAccount) external {
-        address investorAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        address investorAccount = IUserFactory(investorFactoryAddress).getAccountAddress(msg.sender);
         require(investorAccount != address(0), "Create an Account");
         ( , uint256 loanAmount, uint256 interest, , , uint256 loanPeriod, uint256 monthlyRepaymentAmount) = IMerchant(merchantAccount).currentLoanRequest();
         IMerchant(merchantAccount).receiveLoan(investorAccount);
@@ -61,7 +65,7 @@ contract Router is Ownable{
 
     function acceptOffer(address investorAccount, uint256 offerId) external {
         (address investor, uint256 loanAmount, , , uint256 loanPeriod, uint256 monthlyRepaymentAmount) = IInvestor(investorAccount).offers(offerId);
-        address merchantAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        address merchantAccount = IUserFactory(merchantFactoryAddress).getAccountAddress(msg.sender);
         uint256 repaymentAmount = monthlyRepaymentAmount * loanPeriod;
         IMerchant(merchantAccount).getLoan(investor, repaymentAmount, loanPeriod, monthlyRepaymentAmount);
         IInvestor(investor).disburseLoanOffer(merchantAccount, offerId);
@@ -71,7 +75,7 @@ contract Router is Ownable{
     }
 
     function getLoan(address investorPool, uint256 loanAmount) external {
-        address merchantAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        address merchantAccount = IUserFactory(merchantFactoryAddress).getAccountAddress(msg.sender);
         uint256 interest = IInvestorPool(investorPool).interest();
         uint256 loanPeriod = IInvestorPool(investorPool).loanPeriod();
         uint256 repaymentAmount = ((interest / 100) * loanAmount) + loanAmount;
@@ -92,7 +96,7 @@ contract Router is Ownable{
     }
 
     function contributePool(address investorPool, uint256 amount) external {
-        address investorAccount = IUserFactory(userFactoryAddress).getAccountAddress(msg.sender);
+        address investorAccount = IUserFactory(investorFactoryAddress).getAccountAddress(msg.sender);
         IInvestor(investorAccount).contributePool(investorPool, amount);
         IInvestorPool(investorPool).contribute(investorAccount, amount);
     }

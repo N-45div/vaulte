@@ -2,8 +2,6 @@
 pragma solidity ^0.8.27;
 
 import "./userAccount.sol";
-import "./MerchantAccount.sol";
-import "./InvestorAccount.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract UserFactory {
@@ -17,7 +15,6 @@ contract UserFactory {
     struct user {
         string userName;
         address userAddress;
-        string role;
     }
 
     mapping (address => user) public users;
@@ -28,24 +25,12 @@ contract UserFactory {
         usde = usdeAddress;
     }
 
-    function createAccount(string memory userName, uint8 role) external {
+    function createAccount(string memory userName) external {
         require(users[msg.sender].userAddress == address(0), "Already have an account");
-        if (role == 0) {
-            UserAccount newUser = new UserAccount(routerAddress, usde, msg.sender);
-            users[msg.sender] = user(userName, address(newUser), "user");
-            userType[_userCount.current()] = user(userName, address(newUser), "user");
-            _userCount.increment();
-        } else if (role == 1) {
-            MerchantAccount newMerchant = new MerchantAccount(routerAddress, usde, msg.sender);
-            users[msg.sender] = user(userName, address(newMerchant), "merchant");
-            userType[_userCount.current()] = user(userName, address(newMerchant), "merchant");
-            _userCount.increment();
-        } else {
-            InvestorAccount newInvestor = new InvestorAccount(routerAddress, usde, msg.sender);
-            users[msg.sender] = user(userName, address(newInvestor), "investor");
-            userType[_userCount.current()] = user(userName, address(newInvestor), "investor");
-            _userCount.increment();
-        }
+        UserAccount newUser = new UserAccount(routerAddress, usde, msg.sender);
+        users[msg.sender] = user(userName, address(newUser));
+        userType[_userCount.current()] = user(userName, address(newUser));
+        _userCount.increment();
     }
 
     function getAccountAddress(address accountOwner) public view returns(address) {
