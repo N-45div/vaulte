@@ -30,12 +30,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "disbursedId",
-        "type": "uint256"
-      },
-      {
         "indexed": false,
         "internalType": "address",
         "name": "investorAccount",
@@ -86,12 +80,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "subscriptionId",
-        "type": "uint256"
-      },
-      {
         "indexed": false,
         "internalType": "address",
         "name": "userAccount",
@@ -122,12 +110,6 @@
   {
     "anonymous": false,
     "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "paymentId",
-        "type": "uint256"
-      },
       {
         "indexed": false,
         "internalType": "address",
@@ -261,6 +243,32 @@
   },
   {
     "inputs": [],
+    "name": "investorFactoryAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "merchantFactoryAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "owner",
     "outputs": [
       {
@@ -284,6 +292,16 @@
       {
         "internalType": "address",
         "name": "_userFactoryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_investorFactoryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_merchantFactoryAddress",
         "type": "address"
       }
     ],
