@@ -42,30 +42,67 @@ contract InvestorPool is Ownable {
         loanPeriod = _loanPeriod;
     }
 
+    /**
+     * @notice Allows an investor to contribute funds to the pool
+     * @param investorAccount The address of the investor
+     * @param amount The amount of USDE tokens to contribute
+     * @dev Only callable by the router contract
+     */
     function contribute(address investorAccount, uint256 amount) external onlyRouter() {
+        require(amount > 0, "Amount must be greater than 0");
         investors[investorAccount] = amount;
         investmentAmount = investmentAmount + amount;
     }
 
+    /**
+     * @notice Allows an investor to redeem their investment plus any earned returns
+     * @param investorAccount The address of the investor redeeming funds
+     * @dev Calculates payout based on investor's percentage ownership of the pool
+     */
     function redeem(address investorAccount) external {
+        uint256 investorAmount = investors[investorAccount];
+        require(investorAmount > 0, "No investment found");
+        
         uint256 poolBalance = IERC20(usde).balanceOf(address(this));
-        uint256 investorPercentage = (investors[investorAccount] / investmentAmount) * 100;
-        uint256 payoutAmount = (investorPercentage / 100) * poolBalance;
+        // Using fixed-point arithmetic to avoid precision loss
+        uint256 investorPercentage = (investorAmount * 1e18) / investmentAmount;
+        uint256 payoutAmount = (poolBalance * investorPercentage) / 1e18;
 
-        investmentAmount = investmentAmount - investors[investorAccount];
-        IERC20(usde).transfer(investorAccount, payoutAmount);
+        investors[investorAccount] = 0; // Reset investment amount
+        investmentAmount = investmentAmount - investorAmount;
+        
+        require(IERC20(usde).transfer(investorAccount, payoutAmount), "Transfer failed");
     }
 
+    /**
+     * @notice Allows a merchant to take out a loan from the pool
+     * @param merchantAccount The address of the merchant
+     * @param amount The amount of USDE tokens to borrow
+     * @param loanPeriod_ The duration of the loan in months
+     * @dev Only callable by the router contract
+     */
     function getLoan(address merchantAccount, uint256 amount, uint256 loanPeriod_) external onlyRouter() {
-        // uint256 poolBalance = IERC20(usde).balanceOf(address(this));
-        uint256 amountPercentage = (amount / investmentAmount) * 100;
+        require(amount > 0, "Amount must be greater than 0");
+        require(investmentAmount > 0, "Pool has no funds");
+        
+        uint256 amountPercentage = (amount * 100) / investmentAmount;
         require(amountPercentage <= 10, "Amount too high");
         require(loanPeriod_ <= loanPeriod, "max repayment period exceeded");
-        uint256 repaymentAmount = ((interest / 100) * amount) + amount;
-        uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod_;
-        loans[_loanCount.current()] = loan(merchantAccount, repaymentAmount, 0, loanPeriod_, monthlyRepaymentAmount);
 
-        IERC20(usde).transfer(merchantAccount, amount);
+        uint256 repaymentAmount = amount + ((interest * amount) / 100);
+        uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod_;
+        
+        uint256 loanId = _loanCount.current();
+        loans[loanId] = loan(
+            merchantAccount,
+            repaymentAmount,
+            0,
+            loanPeriod_,
+            monthlyRepaymentAmount
+        );
+        _loanCount.increment();
+
+        require(IERC20(usde).transfer(merchantAccount, amount), "Transfer failed");
     }
 
     modifier onlyRouter() {

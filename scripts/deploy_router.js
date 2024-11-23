@@ -28,6 +28,20 @@ async function main() {
   const userFactoryAddress = await userFactory.getAddress();
   console.log("UserFactory deployed to:", userFactoryAddress);
 
+  // Deploy InvestorFactory
+  const InvestorFactory = await hre.ethers.getContractFactory("InvestorFactory");
+  const investorFactory = await InvestorFactory.deploy(routerAddress, USDE_ADDRESS);
+  await investorFactory.waitForDeployment();
+  const investorFactoryAddress = await investorFactory.getAddress();
+  console.log("InvestorFactory deployed to:", investorFactoryAddress);
+
+  // Deploy MerchantFactory
+  const MerchantFactory = await hre.ethers.getContractFactory("MerchantFactory");
+  const merchantFactory = await MerchantFactory.deploy(routerAddress, USDE_ADDRESS);
+  await merchantFactory.waitForDeployment();
+  const merchantFactoryAddress = await merchantFactory.getAddress();
+  console.log("MerchantFactory deployed to:", merchantFactoryAddress);
+
   // Deploy PoolFactory
   const PoolFactory = await hre.ethers.getContractFactory("PoolFactory");
   const poolFactory = await PoolFactory.deploy(routerAddress, USDE_ADDRESS);
@@ -35,17 +49,28 @@ async function main() {
   const poolFactoryAddress = await poolFactory.getAddress();
   console.log("PoolFactory deployed to:", poolFactoryAddress);
 
-  // Set UserFactory in Router
-  const setFactoryTx = await router.setFactory(userFactoryAddress);
+  // Set all factories in Router
+  const setFactoryTx = await router.setFactory(
+    userFactoryAddress,
+    investorFactoryAddress,
+    merchantFactoryAddress
+  );
   await setFactoryTx.wait();
-  console.log("UserFactory set in Router");
+  console.log("All factories set in Router");
+
+  // // After all deployments and before writing to file, get the current block number
+  // const blockNumber = await hre.ethers.provider.getBlockNumber();
+  // console.log("Deployment completed at block:", blockNumber);
 
   // Prepare deployment data
   const deploymentData = {
     network: hre.network.name,
+    // blockNumber: blockNumber,
     usde: USDE_ADDRESS,
     router: routerAddress,
     userFactory: userFactoryAddress,
+    investorFactory: investorFactoryAddress,
+    merchantFactory: merchantFactoryAddress,
     poolFactory: poolFactoryAddress,
     timestamp: new Date().toISOString(),
   };

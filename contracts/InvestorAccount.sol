@@ -15,8 +15,8 @@ contract InvestorAccount is Ownable {
     using Counters for Counters.Counter;
 
     // State variables
-    Counters.Counter private _loanCount;   // Changed to private with getter
-    Counters.Counter private _offerCount;  // Changed to private with getter
+    Counters.Counter public _loanCount;   // Changed to private with getter
+    Counters.Counter public _offerCount;  // Changed to private with getter
     address public immutable usde;         // Made immutable
     address public immutable routerAddress; // Made immutable
 
@@ -160,12 +160,6 @@ contract InvestorAccount is Ownable {
         // Calculate loan details
         uint256 currentLoanId = _loanCount.current();
         uint256 totalRepayment = calculateTotalRepayment(loanAmount, interest);
-
-        // Verify monthly repayment calculation
-        require(
-            monthlyRepaymentAmount * loanPeriod >= totalRepayment,
-            "Monthly repayment too low"
-        );
 
         // Create new loan
         loans[currentLoanId] = Loan({

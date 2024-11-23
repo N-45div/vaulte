@@ -14,7 +14,7 @@ contract MerchantAccount is Ownable {
     using Counters for Counters.Counter;
 
     /**
-     * @notice Counter for tracking the number of subscribtions.
+     * @notice Counter for tracking the number of subscriptions.
      */
     Counters.Counter public _subscriptionCount;
 
@@ -53,6 +53,12 @@ contract MerchantAccount is Ownable {
     mapping (uint256 => subscription) public subscriptions;
     mapping (uint8 => uint256) public prices;
 
+    // Add events for important state changes
+    event LoanRequested(uint256 amount, uint256 interest, uint256 period);
+    event LoanReceived(address investor, uint256 amount);
+    event SubscriptionCharged(address user, uint256 amount);
+    event LoanRepayment(address investor, uint256 amount);
+
     constructor(address _routerAddress, address usdeAddress, address owner) Ownable(owner) {
         routerAddress = _routerAddress;
         usde = usdeAddress;
@@ -86,7 +92,7 @@ contract MerchantAccount is Ownable {
     // function to be automated
     function chargeSubscription() external {
         for (uint i = 0; i < _subscriptionCount.current(); i++) {
-            if (subscriptions[i].paymentDue >= block.timestamp) {
+            if (subscriptions[i].paymentDue <= block.timestamp && subscriptions[i].status) {
                 uint8 tier = subscriptions[i].tier;
                 uint256 price = prices[tier];
 
@@ -97,7 +103,9 @@ contract MerchantAccount is Ownable {
                 if (currentLoan.repaidAmount < currentLoan.repaymentAmount) {
                     IERC20(usde).transfer(currentLoan.investor, paymentAmount);
                     currentLoan.repaidAmount = currentLoan.repaidAmount + paymentAmount;
-                }           
+                    emit LoanRepayment(currentLoan.investor, paymentAmount);
+                }
+                emit SubscriptionCharged(subscriptions[i].userAccount, price);           
             }
         }
     }
@@ -123,39 +131,81 @@ contract MerchantAccount is Ownable {
         });
     }
 
+    /**
+     * @notice Finalizes a loan request by setting up the current loan with an investor
+     * @dev Can only be called by the router contract
+     * @param investor The address of the investor funding the loan
+     */
     function receiveLoan(address investor) external onlyRouter {
-        require(currentLoan.investor == address(0), "Merchant already has an ongoing laon");
-        currentLoan.investor = investor;
-        currentLoan.repaymentAmount = currentLoanRequest.repaymentAmount;
-        currentLoan.repaidAmount = 0;
-        currentLoan.loanPeriod = currentLoanRequest.loanPeriod;
-        currentLoan.monthlyRepaymentAmount = currentLoanRequest.monthlyRepaymentAmount;
+        // Ensure there isn't already an active loan
+        require(currentLoan.investor == address(0), "Merchant already has an ongoing loan");
+
+        // Set up the new loan using parameters from the current loan request
+        currentLoan.investor = investor;                                           // Store investor's address
+        currentLoan.repaymentAmount = currentLoanRequest.repaymentAmount;         // Total amount to be repaid (principal + interest)
+        currentLoan.repaidAmount = 0;                                             // Initialize repaid amount to 0
+        currentLoan.loanPeriod = currentLoanRequest.loanPeriod;                   // Duration of the loan in months
+        currentLoan.monthlyRepaymentAmount = currentLoanRequest.monthlyRepaymentAmount;  // Monthly payment amount
+
+        // Emit event to log the loan creation
+        emit LoanReceived(investor, currentLoanRequest.loanAmount);
     }
 
+    /**
+     * @notice Sets up a new loan for the merchant
+     * @dev Can only be called by the router contract
+     * @param investor The address of the investor funding the loan
+     * @param repaymentAmount Total amount to be repaid including interest
+     * @param loanPeriod Duration of the loan in months
+     * @param monthlyRepaymentAmount Amount to be repaid each month
+     */
     function getLoan(address investor, uint256 repaymentAmount, uint256 loanPeriod, uint256 monthlyRepaymentAmount) external onlyRouter() {
+        // Ensure there isn't already an active loan
         require(currentLoan.investor == address(0), "Merchant already has an ongoing laon");
 
-        currentLoan.investor = investor;
-        currentLoan.repaymentAmount = repaymentAmount;
-        currentLoan.repaidAmount = 0;
-        currentLoan.loanPeriod = loanPeriod;
-        currentLoan.monthlyRepaymentAmount = monthlyRepaymentAmount;
+        // Initialize the loan parameters
+        currentLoan.investor = investor;                    // Set the investor's address
+        currentLoan.repaymentAmount = repaymentAmount;     // Set total amount to be repaid
+        currentLoan.repaidAmount = 0;                      // Initialize repaid amount to 0
+        currentLoan.loanPeriod = loanPeriod;              // Set the loan duration
+        currentLoan.monthlyRepaymentAmount = monthlyRepaymentAmount;  // Set monthly payment amount
     }
 
+    /**
+     * @notice Allows the merchant to repay the entire remaining loan balance
+     * @dev Only callable by the contract owner (merchant)
+     * @custom:throws "Loan has been repaid" if the loan is already fully repaid
+     */
     function repayLoan() external onlyOwner {
         require(currentLoan.repaymentAmount > currentLoan.repaidAmount, "Loan has been repaid");
         uint256 amount = currentLoan.repaymentAmount - currentLoan.repaidAmount;
         IERC20(usde).transfer(currentLoan.investor, amount);
     }
 
+    /**
+     * @notice Calculates the repayment amount for a specific subscription price
+     * @dev Uses the Monthly Recurring Revenue (MRR) to determine proportional repayment
+     * @param subPrice The price of the subscription tier
+     * @return repaymentAmountPerSub The amount that should be repaid from this subscription
+     * @custom:throws "No active subscriptions" if MRR is 0
+     * @custom:throws "Invalid loan period" if loan period is not set
+     */
     function getPaymentAmount(uint256 subPrice) public view returns(uint256 repaymentAmountPerSub) {
        uint256 mrr = getMRR();
+       require(mrr > 0, "No active subscriptions");
+       require(currentLoan.loanPeriod > 0, "Invalid loan period");
+       
        uint256 rpa = currentLoan.repaymentAmount / currentLoan.loanPeriod;
-       uint256 rpp = (rpa / mrr) * 100;
+       uint256 rpp = (rpa * 100) / mrr;
 
-       repaymentAmountPerSub = (rpp / 100) * subPrice;
+       repaymentAmountPerSub = (rpp * subPrice) / 100;
     }
 
+    /**
+     * @notice Calculates the total Monthly Recurring Revenue (MRR) from all active subscriptions
+     * @dev Iterates through all subscriptions and sums up the prices of active ones
+     * @return mrr The total monthly recurring revenue
+     */
     function getMRR() public view returns (uint256 mrr) {
         for (uint i = 0; i < _subscriptionCount.current(); i++) {
             if (subscriptions[i].status == true) {

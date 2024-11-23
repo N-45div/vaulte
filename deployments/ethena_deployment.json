@@ -1,8 +1,10 @@
 {
   "network": "ethena",
   "usde": "0x426E7d03f9803Dd11cb8616C65b99a3c0AfeA6dE",
-  "router": "0x595CeE49356f6260D9D3290f7C052183260314ef",
-  "userFactory": "0x23BBa4b219409F0D835b77C76D08934dc23D5E08",
-  "poolFactory": "0xF0f40Da59B17F1ad1Db8edE5cb5A65De811Eb9Ec",
-  "timestamp": "2024-11-19T05:27:08.883Z"
+  "router": "0xb641cb083bB4b167F41FEF877aBb6F07F9C56168",
+  "userFactory": "0xb2C3FA7E08E30820Fd8D02BE18DFAE9714f8401a",
+  "investorFactory": "0xa15248359B1dB89eBa482c862E861f3e01A125B4",
+  "merchantFactory": "0xa4480565af9a87770FDa24c6eDE28D00E7881b3a",
+  "poolFactory": "0xFF77Df6c148a94440caF3C6a6865a058E1f1F27B",
+  "timestamp": "2024-11-23T16:45:16.445Z"
 }
