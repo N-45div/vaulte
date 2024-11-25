@@ -6,15 +6,81 @@ import { merchantAccountABI } from "./Contract-Artifacts/merchantAccount";
 import { poolABI } from "./Contract-Artifacts/Pool";
 import { poolFactoryABI } from "./Contract-Artifacts/poolFactory";
 import { routerABI } from "./Contract-Artifacts/Router";
-import { userFactoryABI } from "./Contract-Artifacts/UserFactory";
+import { factoryABI } from "./Contract-Artifacts/UserFactory";
 import { ethenaProvider } from "./provider";
 
-export const createLoanRequest = async(signer, loanAmount, interest, loanPeriod) => {
+export const getUserStatus = async (address) => {
     try {
-        const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
-        const merchantAccountAddress = await userFactoryContract.getAccountAddress(signer.address);
+        const provider = new ethers.JsonRpcProvider("https://testnet.rpc.ethena.fi");
+        const userFactoryContract = new ethers.Contract(Addresses.userFactory, factoryABI, provider);
+        const userAccountAddress = await userFactoryContract.getAccountAddress(address);
+
+        const merchantFactoryContract = new ethers.Contract(Addresses.merchantFactory, factoryABI, provider);
+        const merchantAccountAddress = await merchantFactoryContract.getAccountAddress(address);
+
+        const investorFactoryContract = new ethers.Contract(Addresses.investorFactory, factoryABI, provider);
+        const investorAccountAddress = await investorFactoryContract.getAccountAddress(address);        
+
+        // Check if all addresses are null (zero address)
+        const zeroAddress = "0x0000000000000000000000000000000000000000";
+        const user = userAccountAddress !== zeroAddress;
+        const merchant = merchantAccountAddress !== zeroAddress;
+        const investor = investorAccountAddress !== zeroAddress;
+
+        console.log(user, merchant, investor);
+
+        // If all addresses are zero address, return false
+        if (!user && !merchant && !investor) {
+            return false;
+        } else {
+            return true;
+        }
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+export const signUp = async (signer, userName, userType) => {
+    try {
+        let factoryAddress;
+
+        // Determine which factory address to use based on userType
+        if (userType === "investor") {
+            factoryAddress = Addresses.investorFactory;
+        } else if (userType === "merchant") {
+            factoryAddress = Addresses.merchantFactory;
+        } else if (userType === "user") {
+            factoryAddress = Addresses.userFactory;
+        } else {
+            throw new Error("Invalid user type");
+        }
+
+        const factoryContract = new ethers.Contract(factoryAddress, factoryABI, signer);
+        const createAccountTx = await factoryContract.createAccount(userName);
+        const receipt = await createAccountTx.wait();
+
+        if (receipt.status === 1) {
+            console.log('account created');
+            return true;
+        } else {
+            console.error("sign up failed!");
+            return false;
+        }
+
+    } catch(error) {
+        console.error(error, "error calling sign up");
+        return false;
+    }
+} 
+
+export const createLoanRequest = async(signer, _loanAmount, interest, loanPeriod) => {
+    try {
+        const factoryContract = new ethers.Contract(Addresses.merchantFactory, factoryABI, signer);
+        const merchantAccountAddress = await factoryContract.getAccountAddress(signer.address);
 
         const merchantAccountContract = new ethers.Contract(merchantAccountAddress, merchantAccountABI, signer);
+        const loanAmount = ethers.parseEther(_loanAmount);
         const createRequestTx = await merchantAccountContract.makeRequest(loanAmount, interest, loanPeriod);
         const receipt = await createRequestTx.wait();
 
@@ -31,12 +97,13 @@ export const createLoanRequest = async(signer, loanAmount, interest, loanPeriod)
     }
 }
 
-export const createLoanOffer = async(signer, loanAmount, interest, loanPeriod) => {
+export const createLoanOffer = async(signer, _loanAmount, interest, loanPeriod) => {
     try {
         const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
         const investorAccountAddress = await userFactoryContract.getAccountAddress(signer.address);
 
         const investorAccountContract = new ethers.Contract(investorAccountAddress, investorAccountABI, signer);
+        const loanAmount = ethers.parseEther(_loanAmount);
         const createOfferTx = await investorAccountContract.makeRequest(loanAmount, interest, loanPeriod);
         const receipt = await createOfferTx.wait();
 

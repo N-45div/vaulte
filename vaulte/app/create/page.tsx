@@ -4,66 +4,81 @@ import React, { useState } from 'react';
 import { useAccount } from "wagmi";
 import { useEthersSigner } from "../../utils/ethersAdapter";
 import { createLoanOffer, createLoanPool, createLoanRequest } from "../../utils/app";
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 const CreatePage: React.FC = () => {
+  const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<'request' | 'offer' | 'pool'>('request');
-  const [amount, setAmount] = useState<number>(0);
+  const [amount, setAmount] = useState<string>('');
   const [poolName, setPoolName] = useState<string>("");
-  const [repaymentPeriod, setRepaymentPeriod] = useState<number>(0);
-  const [interest, setInterest] = useState<number>(0);
+  const [repaymentPeriod, setRepaymentPeriod] = useState<string>('');
+  const [interest, setInterest] = useState<string>('');
 
-  const signer = useEthersSigner();
+  const signer = useEthersSigner({chainId: 52085143});
 
   const createRequest = async() => {
+    const numericAmount = parseFloat(amount) || 0;
+    const numericInterest = parseFloat(interest) || 0;
+    const numericRepaymentPeriod = parseFloat(repaymentPeriod) || 0;
+
     try {
-      console.log(selectedTab, amount, repaymentPeriod, interest);
-      const result = await createLoanRequest(signer, amount, interest, repaymentPeriod);
+      const result = await createLoanRequest(signer, amount, numericInterest, numericRepaymentPeriod);
       if (result === true) {
-        // display success toast
+        toast.success('Loan request created successfully');
+        router.push('/');
       } else {
-        // display error toast
+        toast.error('Failed to create loan request');
       }
     } catch (error) {
-      // display error toast
+      toast.error('Error creating loan request: ' + (error as Error).message);
     }
   }
 
   const createOffer = async() => {
+    const numericAmount = parseFloat(amount) || 0;
+    const numericInterest = parseFloat(interest) || 0;
+    const numericRepaymentPeriod = parseFloat(repaymentPeriod) || 0;
+
     try {
-      console.log(selectedTab, amount, repaymentPeriod, interest);
-      const result = await createLoanOffer(signer, amount, interest, repaymentPeriod);
+      const result = await createLoanOffer(signer, amount, numericInterest, numericRepaymentPeriod);
       if (result === true) {
-        // display success toast
+        toast.success('Loan offer created successfully');
+        router.push('/');
       } else {
-        // display error toast
+        toast.error('Failed to create loan offer');
       }
     } catch (error) {
-      // display error toast
+      toast.error('Error creating loan offer: ' + (error as Error).message);
     }
   }
 
   const createPool = async() => {
+    const numericAmount = parseFloat(amount) || 0;
+    const numericInterest = parseFloat(interest) || 0;
+    const numericRepaymentPeriod = parseFloat(repaymentPeriod) || 0;
+
     try {
-      console.log(selectedTab, poolName, amount, repaymentPeriod, interest);
-      const result = await createLoanPool(signer, poolName, amount, interest, repaymentPeriod);
+      const result = await createLoanPool(signer, poolName, amount, interest, numericRepaymentPeriod);
       if (result === true) {
-        // display success toast
+        toast.success('Loan pool created successfully');
+        router.push('/');
       } else {
-        // display error toast
+        toast.error('Failed to create loan pool');
       }
     } catch (error) {
-      // display error toast
+      toast.error('Error creating loan pool: ' + (error as Error).message);
     }
   }
 
-  const submit = async() => {
-      if (selectedTab === "request") {
-        await createRequest();
-      } else if (selectedTab === "offer") {
-        await createOffer();
-      } else {
-        await createPool();
-      }
+  const submit = async() => {    
+    if (selectedTab === "request") {
+      await createRequest();
+    } else if (selectedTab === "offer") {
+      await createOffer();
+    } else {
+      await createPool();
+    }
   }  
 
   const handleTabChange = (tab: 'request' | 'offer' | 'pool') => {
@@ -71,8 +86,11 @@ const CreatePage: React.FC = () => {
   };
 
   const calculateMonthlyRepayment = () => {
-    const monthlyInterest = interest / 100 / 12;
-    const repaymentAmount = amount * monthlyInterest / (1 - Math.pow(1 + monthlyInterest, -repaymentPeriod));
+    const numericAmount = parseFloat(amount) || 0;
+    const numericInterest = parseFloat(interest) || 0;
+    const numericRepaymentPeriod = parseFloat(repaymentPeriod) || 0;
+    const monthlyInterest = numericInterest / 100 / numericRepaymentPeriod;
+    const repaymentAmount = numericAmount * monthlyInterest / (1 - Math.pow(1 + monthlyInterest, -numericRepaymentPeriod));
     return repaymentAmount ? repaymentAmount.toFixed(2) : "0.00";
   };
 
@@ -102,13 +120,16 @@ const CreatePage: React.FC = () => {
             selectedTab === tab && (
               <div key={tab}>
                 <h2 className="text-2xl font-semibold mb-6 text-gray-200">Create a {tab.charAt(0).toUpperCase() + tab.slice(1)}</h2>
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={(e) => {
+                  e.preventDefault();
+                  submit();
+                }}>
                   <div>
                     <label className="block text-sm font-medium text-gray-400">Amount</label>
                     <input
                       type="number"
                       value={amount}
-                      onChange={(e) => setAmount(Number(e.target.value))}
+                      onChange={(e) => setAmount(e.target.value)}
                       className="mt-2 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300 focus:outline-none focus:border-blue-500 shadow-inner"
                       placeholder="Enter amount"
                     />
@@ -118,7 +139,7 @@ const CreatePage: React.FC = () => {
                     <input
                       type="number"
                       value={repaymentPeriod}
-                      onChange={(e) => setRepaymentPeriod(Number(e.target.value))}
+                      onChange={(e) => setRepaymentPeriod(e.target.value)}
                       className="mt-2 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300 focus:outline-none focus:border-blue-500 shadow-inner"
                       placeholder="Enter repayment period"
                     />
@@ -128,7 +149,7 @@ const CreatePage: React.FC = () => {
                     <input
                       type="number"
                       value={interest}
-                      onChange={(e) => setInterest(Number(e.target.value))}
+                      onChange={(e) => setInterest(e.target.value)}
                       className="mt-2 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300 focus:outline-none focus:border-blue-500 shadow-inner"
                       placeholder="Enter interest rate"
                     />

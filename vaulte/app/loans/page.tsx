@@ -1,15 +1,37 @@
 "use client";
 
-import React, { useState } from 'react';
-import { LoanOfferInfo, LoanRequestInfo, LoanPoolInfo } from "../../utils/AppFetch";
+import React, { useState, useEffect } from 'react';
+// import { LoanOfferInfo, LoanRequestInfo, LoanPoolInfo } from "../../utils/AppFetch";
 import { fundRequest, acceptOffer, loanPoolAction } from "../../utils/app";
 import { useAccount } from "wagmi";
 import { useEthersSigner } from "../../utils/ethersAdapter";
+import { fetchLoanRequests } from "../../utils/AppFetch";
+
+interface LoanRequestInfo {
+  merchantName: string;
+  merchantAddress: string;
+  merchantMRR: number;
+  requestAmount: number;
+  repaymentTime: number;
+  interest: number;
+}
 
 const LoansPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('requests');
+  const [loanRequests, setLoanRequests] = useState<LoanRequestInfo[]>([]);
 
   const signer = useEthersSigner();
+
+  useEffect(() => {
+    const getLoanRequests = async () => {
+      const requests = await fetchLoanRequests();
+      if (requests) {
+        setLoanRequests(requests);
+      }
+    };
+
+    getLoanRequests();
+  }, []);
 
   const fundLoanRequest = async (merchantAddress: string) => {
     try {
@@ -59,17 +81,26 @@ const LoansPage: React.FC = () => {
         return (
           <div className="p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700 space-y-4">
             <h2 className="text-2xl font-bold mb-4 text-gray-100">Loan Requests</h2>
-            {/* Sample Request Component */}
-            <div className="p-4 bg-gray-700 rounded-lg shadow-md space-y-2">
-              <p>Merchant Name: John Doe</p>
-              <p>Monthly Recurring Revenue (MRR): $500</p>
-              <p>Request Amount: $1,000</p>
-              <p>Repayment Time: 6 months</p>
-              <p>Interest: 5%</p>
-              <button className="mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg">
-                Accept
-              </button>
-            </div>
+            {loanRequests.length === 0 ? (
+              <p className="text-gray-400">No loan requests available</p>
+            ) : (
+              loanRequests.map((request, index) => (
+                <div key={index} className="p-4 bg-gray-700 rounded-lg shadow-md space-y-2">
+                  <p>Merchant Name: {request.merchantName}</p>
+                  <p>Merchant Address: {request.merchantAddress}</p>
+                  <p>Monthly Recurring Revenue (MRR): ${request.merchantMRR}</p>
+                  <p>Request Amount: ${request.requestAmount}</p>
+                  <p>Repayment Time: {request.repaymentTime} months</p>
+                  <p>Interest: {request.interest}%</p>
+                  <button 
+                    onClick={() => fundLoanRequest(request.merchantAddress)}
+                    className="mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg"
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         );
 

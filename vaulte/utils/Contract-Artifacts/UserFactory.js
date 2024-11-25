@@ -1,4 +1,4 @@
-export const userFactoryABI = [
+export const factoryABI = [
     {
         "inputs": [
           {
@@ -88,5 +88,18 @@ export const userFactoryABI = [
         ],
         "stateMutability": "view",
         "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "userName",
+          "type": "string"
+        }
+      ],
+      "name": "createAccount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
 ]

@@ -3,31 +3,28 @@ import { HoveredLink, Menu, MenuItem } from "./components/ui/navbar-menu";
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useEthersSigner } from "../utils/ethersAdapter";
 import { useAccount, useDisconnect } from 'wagmi';
+import { getUserStatus, signUp } from '../utils/app';
 
 const Home: React.FC = () => {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
   const [active, setActive] = useState<string | null>(null);
   const [showSignUpForm, setShowSignUpForm] = useState(false);
   const [userName, setUserName] = useState("");
   const [role, setRole] = useState<"user" | "merchant" | "investor" | null>(null);
-  const [hasAccount, setHasAccount] = useState(false);
+  const [hasAccount, setHasAccount] = useState(true);
+
+  const signer = useEthersSigner({chainId: 52085143});
 
   // Check if user has an account when wallet is connected
   useEffect(() => {
     const checkUserAccount = async () => {
       if (isConnected) {
-        // Add your API call here to check if user exists
-        // For now, we'll simulate it
         try {
-          // const response = await fetch('/api/check-user');
-          // const data = await response.json();
-          // setHasAccount(data.exists);
-          // if (data.exists) {
-          //   setRole(data.role);
-          // }
-          setHasAccount(false); // Simulate new user
+          setHasAccount(await getUserStatus(address));
+          
         } catch (error) {
           console.error('Error checking user account:', error);
         }
@@ -41,13 +38,11 @@ const Home: React.FC = () => {
   const handleSignUp = async () => {
     if (userName && role) {
       try {
-        // Add your API call here to create user
-        // await fetch('/api/create-user', {
-        //   method: 'POST',
-        //   body: JSON.stringify({ userName, role }),
-        // });
-        setShowSignUpForm(false);
-        setHasAccount(true);
+        const result = await signUp(signer, userName, role);
+        // if(result) {
+          setShowSignUpForm(false);
+          setHasAccount(true);
+        // }
       } catch (error) {
         console.error('Error creating user:', error);
       }

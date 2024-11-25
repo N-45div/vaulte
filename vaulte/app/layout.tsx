@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Web3Provider } from './providers/Web3Provider'
+import { Toaster } from 'react-hot-toast';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,10 +26,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Web3Provider>{children}</Web3Provider>
-      </body>
-    </html>
+    <>
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Toaster position="top-right"/>
+          <Web3Provider>{children}</Web3Provider>
+        </body>
+      </html>
+    </>
   );
 }
