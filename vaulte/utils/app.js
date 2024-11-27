@@ -99,12 +99,12 @@ export const createLoanRequest = async(signer, _loanAmount, interest, loanPeriod
 
 export const createLoanOffer = async(signer, _loanAmount, interest, loanPeriod) => {
     try {
-        const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
-        const investorAccountAddress = await userFactoryContract.getAccountAddress(signer.address);
+        const factoryContract = new ethers.Contract(Addresses.investorFactory, factoryABI, signer);
+        const investorAccountAddress = await factoryContract.getAccountAddress(signer.address);
 
         const investorAccountContract = new ethers.Contract(investorAccountAddress, investorAccountABI, signer);
         const loanAmount = ethers.parseEther(_loanAmount);
-        const createOfferTx = await investorAccountContract.makeRequest(loanAmount, interest, loanPeriod);
+        const createOfferTx = await investorAccountContract.makeOffer(loanAmount, interest, loanPeriod);
         const receipt = await createOfferTx.wait();
 
         if (receipt.status === 1) {
@@ -120,7 +120,7 @@ export const createLoanOffer = async(signer, _loanAmount, interest, loanPeriod) 
     }
 }
 
-export const createLoanPool = async(signer, poolName, startAmount, interest, loanPeriod) => {
+export const createLoanPool = async(signer, poolName, _startAmount, interest, loanPeriod) => {
     try {
         const poolFactoryContract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
         const createPoolTx = await poolFactoryContract.createPool(poolName, interest, loanPeriod);
@@ -131,6 +131,9 @@ export const createLoanPool = async(signer, poolName, startAmount, interest, loa
 
         if (receipt.status === 1) {
             console.log('pool created');
+            const startAmount = ethers.parseEther(_startAmount);
+            const erc20Contract = new ethers.Contract(Addresses.usde, erc20ABI, signer);
+            await erc20Contract.approve(Addresses.router, startAmount);
             const result = await contributePool(signer, startAmount, poolId);
             if (result === true) {
                 return true;
@@ -209,14 +212,11 @@ const contributePool = async (signer, amount, poolId) => {
 
 const getPoolLoan = async (signer, amount, poolId, loanPeriod) => {
     try {
-        const userFactoryContract = new ethers.Contract(Addresses.userFactory, userFactoryABI, signer);
-        const merchantAccount = await userFactoryContract.getAccountAddress(signer.address);
-
         const poolFactoryConract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, signer);
         const poolAddress = await poolFactoryConract.getPoolAddress(poolId);
         
-        const poolContract = new ethers.Contract(poolAddress, poolABI, signer);
-        const getLoanTx = await poolContract.getLoan(merchantAccount, amount, loanPeriod);
+        const routerContract = new ethers.Contract(Addresses.router, routerABI, signer);
+        const getLoanTx = await routerContract.getLoan(poolAddress, amount);
         const receipt = await getLoanTx.wait();
 
         if (receipt.status === 1) {
@@ -232,28 +232,22 @@ const getPoolLoan = async (signer, amount, poolId, loanPeriod) => {
     }
 }
 
-export const loanPoolAction = async (signer, amount, poolId) => {
+export const loanPoolAction = async (signer, _amount, poolId, tx) => {
     try {
-        const userFactoryContract = new ethers.Contract(Addresses.poolFactory, poolFactoryABI, ethenaProvider);
-        const user = await userFactoryContract.users(signer.address);
-        console.log(user);
-        if (user[2] === "investor") {
-            const result = await contributePool(signer, amount, poolId);
-            if (result === true) {
-                return true;
-            } else {
-                return false;
-            }
-        } else if (user[2] === "investor") {
-            const result = await getPoolLoan(signer, amount, poolId, 6);
-            if (result === true) {
-                return true;
-            } else {
-                return false;
-            }
+        const INVEST_ACTION = 0;
+        const GET_LOAN_ACTION = 1;
+        
+        const amount = ethers.parseEther(_amount);
+        switch (tx) {
+            case INVEST_ACTION:
+                return await contributePool(signer, amount, poolId);
+            case GET_LOAN_ACTION:
+                return await getPoolLoan(signer, amount, poolId, 6);
+            default:
+                throw new Error('Invalid pool action type');
         }
     } catch (error) {
-        console.log(error);        
+        console.error('Pool action failed:', error);        
         return false;
     }
 }

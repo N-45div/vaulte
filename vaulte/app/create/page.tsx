@@ -59,7 +59,7 @@ const CreatePage: React.FC = () => {
     const numericRepaymentPeriod = parseFloat(repaymentPeriod) || 0;
 
     try {
-      const result = await createLoanPool(signer, poolName, amount, interest, numericRepaymentPeriod);
+      const result = await createLoanPool(signer, poolName, numericAmount, numericInterest, numericRepaymentPeriod);
       if (result === true) {
         toast.success('Loan pool created successfully');
         router.push('/');
@@ -124,6 +124,18 @@ const CreatePage: React.FC = () => {
                   e.preventDefault();
                   submit();
                 }}>
+                  {tab === 'pool' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400">Pool Name</label>
+                      <input
+                        type="text"
+                        value={poolName}
+                        onChange={(e) => setPoolName(e.target.value)}
+                        className="mt-2 block w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300 focus:outline-none focus:border-blue-500 shadow-inner"
+                        placeholder="Enter pool name"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-400">Amount</label>
                     <input
@@ -155,13 +167,14 @@ const CreatePage: React.FC = () => {
                     />
                   </div>
 
-                  {/* Monthly Repayment Amount */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400">Monthly Repayment Amount</label>
-                    <div className="mt-2 px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300">
-                      {calculateMonthlyRepayment()}
+                  {tab !== 'pool' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400">Monthly Repayment Amount</label>
+                      <div className="mt-2 px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-gray-300">
+                        {calculateMonthlyRepayment()}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <button
                     type="submit"

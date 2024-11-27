@@ -6,6 +6,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEthersSigner } from "../utils/ethersAdapter";
 import { useAccount, useDisconnect } from 'wagmi';
 import { getUserStatus, signUp } from '../utils/app';
+import toast from 'react-hot-toast';
 
 const Home: React.FC = () => {
   const { isConnected, address } = useAccount();
@@ -39,12 +40,16 @@ const Home: React.FC = () => {
     if (userName && role) {
       try {
         const result = await signUp(signer, userName, role);
-        // if(result) {
+        if (result) {
+          toast.success('Account created successfully!');
           setShowSignUpForm(false);
           setHasAccount(true);
-        // }
+        } else {
+          toast.error('Failed to create account');
+        }
       } catch (error) {
         console.error('Error creating user:', error);
+        toast.error('Error creating account: ' + (error as Error).message);
       }
     }
   };

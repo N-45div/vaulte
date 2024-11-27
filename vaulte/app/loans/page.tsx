@@ -5,7 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { fundRequest, acceptOffer, loanPoolAction } from "../../utils/app";
 import { useAccount } from "wagmi";
 import { useEthersSigner } from "../../utils/ethersAdapter";
-import { fetchLoanRequests } from "../../utils/AppFetch";
+import { fetchLoanRequests, fetchLoanOffers, fetchLoanPools } from "../../utils/AppFetch";
+import toast from 'react-hot-toast';
 
 interface LoanRequestInfo {
   merchantName: string;
@@ -16,9 +17,27 @@ interface LoanRequestInfo {
   interest: number;
 }
 
+interface LoanOfferInfo {
+  investorAddress: string;
+  investorName: string;
+  offerId: number;
+  offerAmount: number;
+  repaymentTime: number;
+  interest: number;
+}
+
+interface LoanPoolInfo {
+  poolName: string;
+  interest: number;
+  poolAddress: string;
+}
+
 const LoansPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('requests');
   const [loanRequests, setLoanRequests] = useState<LoanRequestInfo[]>([]);
+  const [loanOffers, setLoanOffers] = useState<LoanOfferInfo[]>([]);
+  const [loanPools, setLoanPools] = useState<LoanPoolInfo[]>([]);
+  const [amount, setAmount] = useState<string>('');
 
   const signer = useEthersSigner();
 
@@ -33,17 +52,39 @@ const LoansPage: React.FC = () => {
     getLoanRequests();
   }, []);
 
+  useEffect(() => {
+    const getLoanOffers = async () => {
+      const offers = await fetchLoanOffers();
+      if (offers) {
+        setLoanOffers(offers);
+      }
+    };
+
+    getLoanOffers();
+  }, []);
+
+  useEffect(() => {
+    const getLoanPools = async () => {
+      const pools = await fetchLoanPools();
+      if (pools) {
+        setLoanPools(pools);
+      }
+    };
+
+    getLoanPools();
+  }, []);
+
   const fundLoanRequest = async (merchantAddress: string) => {
     try {
       const result = await fundRequest(signer, merchantAddress);
       if (result === true) {
-        // display success toast
+        toast.success('Loan request funded successfully');
       } else {
-        // display error toast
+        toast.error('Failed to fund loan request');
       }
     } catch (error) {
       console.log(error);
-      // display error toast
+      toast.error('Error funding loan request: ' + (error as Error).message);
     }
   }
 
@@ -51,27 +92,27 @@ const LoansPage: React.FC = () => {
     try {
       const result = await acceptOffer(signer, investorAddress, offerId);
       if (result === true) {
-        // display success toast
+        toast.success('Loan offer accepted successfully');
       } else {
-        // display error toast
+        toast.error('Failed to accept loan offer');
       }
     } catch (error) {
       console.log(error);
-      // display error toast
+      toast.error('Error accepting loan offer: ' + (error as Error).message);
     }
   }
 
-  const poolAction = async (amount: number, poolId: number) => {
+  const poolAction = async (poolId: number, tx: number) => {
     try {
-      const result = await loanPoolAction(signer, amount, poolId);
+      const result = await loanPoolAction(signer, amount, poolId, tx);
       if (result === true) {
-        // display success toast
+        toast.success(tx === 0 ? 'Successfully contributed to pool' : 'Successfully got loan from pool');
       } else {
-        // display error toast
+        toast.error(tx === 0 ? 'Failed to contribute to pool' : 'Failed to get loan from pool');
       }
     } catch (error) {
       console.log(error);
-      // display error toast
+      toast.error('Error performing pool action: ' + (error as Error).message);
     }
   }
 
@@ -108,16 +149,25 @@ const LoansPage: React.FC = () => {
         return (
           <div className="p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700 space-y-4">
             <h2 className="text-2xl font-bold mb-4 text-gray-100">Loan Offers</h2>
-            {/* Sample Offer Component */}
-            <div className="p-4 bg-gray-700 rounded-lg shadow-md space-y-2">
-              <p>Investor Name: Alice Smith</p>
-              <p>Offer Amount: $1,000</p>
-              <p>Repayment Time: 6 months</p>
-              <p>Interest: 4%</p>
-              <button className="mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg">
-                Accept
-              </button>
-            </div>
+            {loanOffers.length === 0 ? (
+              <p className="text-gray-400">No loan offers available</p>
+            ) : (
+              loanOffers.map((offer, index) => (
+                <div key={index} className="p-4 bg-gray-700 rounded-lg shadow-md space-y-2">
+                  <p>Investor Name: {offer.investorName}</p>
+                  <p>Investor Address: {offer.investorAddress}</p>
+                  <p>Offer Amount: ${offer.offerAmount}</p>
+                  <p>Repayment Time: {offer.repaymentTime} months</p>
+                  <p>Interest: {offer.interest}%</p>
+                  <button 
+                    onClick={() => acceptLoanOffer(offer.investorAddress, offer.offerId)}
+                    className="mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg"
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         );
 
@@ -125,25 +175,38 @@ const LoansPage: React.FC = () => {
         return (
           <div className="p-6 bg-gray-800 rounded-lg shadow-lg border border-gray-700 space-y-4">
             <h2 className="text-2xl font-bold mb-4 text-gray-100">Pools</h2>
-            {/* Sample Pool Component */}
-            <div className="p-4 bg-gray-700 rounded-lg shadow-md space-y-2">
-              <p>Pool Name: Growth Fund</p>
-              <p>Repayment Time: 12 months</p>
-              <p>Interest: 3.5%</p>
-              <div className="flex items-center space-x-2">
-                <input 
-                  type="number" 
-                  placeholder="Amount" 
-                  className="p-2 bg-gray-800 border border-gray-600 rounded-lg text-white shadow-inner focus:outline-none"
-                />
-                <button className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg">
-                  Get
-                </button>
-                <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition shadow-lg">
-                  Invest
-                </button>
-              </div>
-            </div>
+            {loanPools.length === 0 ? (
+              <p className="text-gray-400">No pools available</p>
+            ) : (
+              loanPools.map((pool, index) => (
+                <div key={index} className="p-4 bg-gray-700 rounded-lg shadow-md space-y-2">
+                  <p>Pool Name: {pool.poolName}</p>
+                  <p>Interest: {pool.interest}%</p>
+                  <p>Pool Address: {pool.poolAddress}</p>
+                  <div className="flex items-center space-x-2">
+                    <input 
+                      type="number" 
+                      placeholder="Amount" 
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="p-2 bg-gray-800 border border-gray-600 rounded-lg text-white shadow-inner focus:outline-none"
+                    />
+                    <button 
+                      onClick={() => poolAction(index, 1)}
+                      className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-lg"
+                    >
+                      Get
+                    </button>
+                    <button 
+                      onClick={() => poolAction(index, 0)}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition shadow-lg"
+                    >
+                      Invest
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         );
 
