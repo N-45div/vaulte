@@ -23,16 +23,9 @@ Vaulte is designed for Ethena x Encode Hackathon 2024, addressing critical chall
 
 ---
 
-## Problem Statement
+## Problem Statement  
 
-The current financial infrastructure is often fragmented, costly, and inaccessible to many. Key issues include:  
-
-- Inefficiencies in managing subscription payments.  
-- Lack of automated reinvestment mechanisms for loan repayments.  
-- Limited opportunities for collective financial contributions and investments.  
-- Challenges in offering consistent returns for investors.
-
-These problems demand a streamlined, decentralized solution to empower individuals and small businesses with more robust financial tools.
+The lack of accessible loans for online businesses and indie hackers creates a significant hurdle for creatives and small-scale entrepreneurs. Current investment models often demand equity, leaving founders with fewer ownership rights. While platforms like indie.vc, Earnest Capital, and TinySeed exist, they primarily focus on equity-based funding. *Vaulte* seeks to solve this by offering flexible, equity-free loan solutions tailored to the needs of creatives, making repayment simple and empowering independent creators to retain full control of their ventures.  
 
 ---
 
