@@ -1,0 +1,41 @@
+type LoanDisbursed @entity(immutable: true) {
+  id: Bytes!
+  investorAccount: Bytes! # address
+  merchantAccount: Bytes! # address
+  amount: BigInt! # uint256
+  loanCategory: Int! # uint8
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type OwnershipTransferred @entity(immutable: true) {
+  id: Bytes!
+  previousOwner: Bytes! # address
+  newOwner: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Sub @entity(immutable: true) {
+  id: Bytes!
+  userAccount: Bytes! # address
+  merchantAccount: Bytes! # address
+  tier: BigInt! # uint256
+  subTime: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type SubscriptionPayment @entity(immutable: true) {
+  id: Bytes!
+  userAccount: Bytes! # address
+  merchantAccount: Bytes! # address
+  paymentAmount: BigInt! # uint256
+  paymentTime: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

@@ -1,0 +1,33 @@
+specVersion: 0.0.5
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Vaulte
+    network: ethena-testnet
+    source:
+      address: "0x0058e73DE38A00a870beEA2b0185432C9b01eA61"
+      abi: Vaulte
+      startBlock: 2503424
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - LoanDisbursed
+        - OwnershipTransferred
+        - Sub
+        - SubscriptionPayment
+      abis:
+        - name: Vaulte
+          file: Vaulte/abis/Vaulte.json
+      eventHandlers:
+        - event: LoanDisbursed(address,address,uint256,uint8)
+          handler: handleLoanDisbursed
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+        - event: Subscription(address,address,uint256,uint256)
+          handler: handleSubscription
+        - event: SubscriptionPayment(address,address,uint256,uint256)
+          handler: handleSubscriptionPayment
+      file: Vaulte/Vaulte.wasm
