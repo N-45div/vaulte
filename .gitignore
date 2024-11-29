@@ -8,3 +8,5 @@ vaulte/node_modules
 vaulte/.next
 artifacts
 cache
+ignition
+.vercel
