@@ -2,10 +2,10 @@ import { ethers } from "ethers";
 import { Addresses } from "./Contract-Artifacts/Addresses";
 import { factoryABI } from "./Contract-Artifacts/UserFactory";
 import { ethenaProvider } from "./provider";
-import { merchantAccountABI } from "./Contract-Artifacts/merchantAccount";
+import { merchantAccountABI } from "./Contract-Artifacts/MerchantAccount";
 import { investorAccountABI } from "./Contract-Artifacts/InvestorAccount";
-import { poolFactoryABI } from "./Contract-Artifacts/poolFactory";
-import { merchantFactoryABI } from "./Contract-Artifacts/merchantFactoryABI";
+import { poolFactoryABI } from "./Contract-Artifacts/PoolFactory";
+import { merchantFactoryABI } from "./Contract-Artifacts/MerchantFactory";
 import { investorFactoryABI } from "./Contract-Artifacts/InvestorFactory";
 
 // Removed TypeScript interfaces - keeping comments for reference structure
@@ -108,4 +108,22 @@ export const fetchLoanPools = async () => {
     } catch (error) {
         console.log(error);
     }
+}
+
+export const getAccountAddress = async (userType, userAddress) => {
+    let factoryAddress;
+    if (userType === "merchant") {
+        factoryAddress = Addresses.merchantFactory;
+    } else if (userType === "investor") {
+        factoryAddress = Addresses.investorFactory;
+    } else if (userType === "user") {
+        factoryAddress = Addresses.userFactory;
+    }
+    const factoryContract = new ethers.Contract(factoryAddress, factoryABI, ethenaProvider);
+    const accountAddress = await factoryContract.getAccountAddress(userAddress);
+    return accountAddress;
+}
+
+export const getUserBalance = async (userType, userAddress) => {
+    
 }

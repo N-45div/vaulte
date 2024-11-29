@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NextPage } from 'next';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { getAccountAddress } from '@/utils/AppFetch';
+import { useAccount } from 'wagmi';
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -25,11 +27,33 @@ interface Loan {
 }
 
 const Dashboard: NextPage = () => {
-  const merchantAddress = "0x123...abc";
+  const { address } = useAccount();
+  const [merchantAddress, setMerchantAddress] = useState<string>("Loading...");
   const [loans] = useState<Loan[]>([
     { investor: 'John Doe', amount: 500, repaymentDate: '2025-01-01' },
     { investor: 'Jane Smith', amount: 300, repaymentDate: '2025-02-01' },
   ]);
+
+  const abbreviateAddress = (address: string) => {
+    if (address === "Loading..." || address === "Error loading address") return address;
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  useEffect(() => {
+    const fetchMerchantAddress = async () => {
+      if (address) {
+        try {
+          const accountAddress = await getAccountAddress("merchant", address);
+          setMerchantAddress(accountAddress);
+        } catch (error) {
+          console.error("Error fetching merchant address:", error);
+          setMerchantAddress("Error loading address");
+        }
+      }
+    };
+
+    fetchMerchantAddress();
+  }, [address]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(merchantAddress);
@@ -70,7 +94,7 @@ const Dashboard: NextPage = () => {
           <div className="flex justify-between items-center">
             <span className="font-semibold">Merchant Address:</span>
             <button onClick={handleCopy} className="text-blue-400 hover:text-blue-500">
-              {merchantAddress}
+              {abbreviateAddress(merchantAddress)}
             </button>
           </div>
         </div>
