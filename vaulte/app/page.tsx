@@ -81,6 +81,7 @@ const Home: React.FC = () => {
                 <div className="flex flex-col space-y-4 text-sm">
                   <HoveredLink href="/loans">Loans</HoveredLink>
                   <HoveredLink href="/create">Create</HoveredLink>
+                  <HoveredLink href="/stats">Stats</HoveredLink>
                 </div>
               </MenuItem>
               <MenuItem setActive={setActive} active={active} item="Account">
