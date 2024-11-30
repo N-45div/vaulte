@@ -126,20 +126,21 @@ export const createLoanPool = async(signer, poolName, _startAmount, interest, lo
         const createPoolTx = await poolFactoryContract.createPool(poolName, interest, loanPeriod);
         const receipt = await createPoolTx.wait();
 
-        const poolCount = await poolFactoryContract._poolCount();
-        const poolId = poolCount - 1;
+        // const poolCount = await poolFactoryContract._poolCount();
+        // const poolId = poolCount - 1;
 
         if (receipt.status === 1) {
             console.log('pool created');
-            const startAmount = ethers.parseEther(_startAmount);
-            const erc20Contract = new ethers.Contract(Addresses.usde, erc20ABI, signer);
-            await erc20Contract.approve(Addresses.router, startAmount);
-            const result = await contributePool(signer, startAmount, poolId);
-            if (result === true) {
-                return true;
-            } else {
-                return false;
-            }
+            return true;
+            // const startAmount = ethers.parseEther(_startAmount);
+            // const erc20Contract = new ethers.Contract(Addresses.usde, erc20ABI, signer);
+            // await erc20Contract.approve(Addresses.router, startAmount);
+            // const result = await contributePool(signer, startAmount, poolId);
+            // if (result === true) {
+            //     return true;
+            // } else {
+            //     return false;
+            // }
         } else {
             console.error("Transaction failed!");
             return false;
