@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NextPage } from 'next';
 import { Line } from 'react-chartjs-2';
 import { FaTelegramPlane, FaPlus, FaCopy } from 'react-icons/fa';
+import { useAccount } from 'wagmi';
+import { getInvestorDetails } from '../../utils/AppFetch';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,45 +17,56 @@ import {
   Legend,
 } from 'chart.js';
 
-// Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-interface ChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    borderColor: string;
-    backgroundColor: string;
-  }[];
-}
-
-interface Pool {
-  merchantName: string;
-  loanAmount: number;
-  repaymentDate: string;
-}
-
-interface Loan {
-  merchantName: string;
-  loanAmount: number;
-  repaymentDate: string;
+interface InvestorDetails {
+  accountAddress: string;
+  accountBalance: string;
+  totalDisbursed: number;
+  activeLoans: Array<{
+    merchantName: string;
+    loanAmount: number;
+  }>;
+  result: {
+    months: string[];
+    amounts: number[];
+  };
 }
 
 const InvestorDashboard: NextPage = () => {
-  const investorAddress = "0x456...DEF";
+  const { address } = useAccount();
+  const [investorDetails, setInvestorDetails] = useState<InvestorDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInvestorDetails = async () => {
+      if (!address) return;
+      try {
+        const details = await getInvestorDetails(address);
+        setInvestorDetails(details);
+      } catch (error) {
+        console.error('Error fetching investor details:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvestorDetails();
+  }, [address]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(investorAddress);
-    alert("Address copied!");
+    if (investorDetails?.accountAddress) {
+      navigator.clipboard.writeText(investorDetails.accountAddress);
+      alert("Address copied!");
+    }
   };
 
-  const lineChartData: ChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  const lineChartData = {
+    labels: investorDetails?.result.months || [],
     datasets: [
       {
-        label: 'Amount Earned ($)',
-        data: [12, 18, 22, 28, 35, 40],
+        label: 'Amount Disbursed ($)',
+        data: investorDetails?.result.amounts || [],
         borderColor: '#4ade80',
         backgroundColor: 'rgba(74, 222, 128, 0.3)',
       },
@@ -72,7 +85,7 @@ const InvestorDashboard: NextPage = () => {
       },
       title: {
         display: true,
-        text: 'Amount Earned Over Time',
+        text: 'Amount Disbursed Over Time',
         color: 'white',
       },
     },
@@ -88,14 +101,9 @@ const InvestorDashboard: NextPage = () => {
     },
   };
 
-  const activePools: Pool[] = [
-    { merchantName: 'Merchant A', loanAmount: 1500, repaymentDate: '2025-01-10' },
-    { merchantName: 'Merchant B', loanAmount: 2000, repaymentDate: '2025-04-15' },
-  ];
-
-  const activeLoans: Loan[] = [
-    { merchantName: 'Merchant C', loanAmount: 800, repaymentDate: '2025-03-10' },
-  ];
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
@@ -106,53 +114,34 @@ const InvestorDashboard: NextPage = () => {
           <div className="flex justify-between items-center">
             <span className="font-medium">Investor Address:</span>
             <button onClick={handleCopy} className="text-blue-400 hover:underline flex items-center gap-1">
-              <FaCopy /> {investorAddress}
+              <FaCopy /> {investorDetails?.accountAddress.slice(0, 6)}...{investorDetails?.accountAddress.slice(-4)}
             </button>
           </div>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-lg shadow">
           <p className="font-medium">Current Balance:</p>
-          <p className="text-xl">$10</p>
+          <p className="text-xl">${Number(investorDetails?.accountBalance || 0).toFixed(2)}</p>
         </div>
 
         <div className="bg-gray-800 p-4 rounded-lg shadow">
-          <p className="font-medium">Monthly Recurring Revenue:</p>
-          <p className="text-xl">$10</p>
-        </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg shadow">
-          <p className="font-medium">Active Pools:</p>
-          <p className="text-xl">{activePools.length}</p>
+          <p className="font-medium">Total Amount Disbursed:</p>
+          <p className="text-xl">${investorDetails?.totalDisbursed.toFixed(2)}</p>
         </div>
       </div>
 
       <div className="bg-gray-800 p-4 mt-6 rounded-lg shadow">
-        <h2 className="font-medium mb-4">Amount Earned in One Year</h2>
+        <h2 className="font-medium mb-4">Amount Disbursed Over Time</h2>
         <Line data={lineChartData} options={lineChartOptions} />
       </div>
 
       <div className="mt-6">
-        <h2 className="text-xl font-medium mb-4">Active Pools</h2>
-        {activePools.map((pool, index) => (
-          <div key={index} className="bg-gray-800 p-4 rounded-lg shadow mb-4 flex justify-between">
-            <div>
-              <p className="font-medium">{pool.merchantName}</p>
-              <p>Loan Amount: ${pool.loanAmount}</p>
-              <p>Repayment Date: {pool.repaymentDate}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6">
         <h2 className="text-xl font-medium mb-4">Active Loans</h2>
-        {activeLoans.map((loan, index) => (
+        {investorDetails?.activeLoans.map((loan, index) => (
           <div key={index} className="bg-gray-800 p-4 rounded-lg shadow mb-4 flex justify-between">
             <div>
               <p className="font-medium">{loan.merchantName}</p>
               <p>Loan Amount: ${loan.loanAmount}</p>
-              <p>Repayment Date: {loan.repaymentDate}</p>
             </div>
           </div>
         ))}

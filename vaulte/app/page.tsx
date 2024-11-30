@@ -198,7 +198,7 @@ const Home: React.FC = () => {
 
         <section className="text-center py-20">
           <h2 className="text-3xl md:text-4xl font-bold tracking-wide mb-8">
-            Powered by Ethena and Layer Zero
+            Powered by Ethena and Goldsky
           </h2>
           <p className="text-blue-200">
             Secure, reliable, and fully decentralized infrastructure for seamless financial services.

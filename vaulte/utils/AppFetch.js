@@ -126,10 +126,15 @@ export const getMerchantDetails = async (merchantAddress) => {
     const startTime = Math.floor(new Date("2024-11-20T00:00:00Z").getTime() / 1000); // Default start time
   
     const revenue = await getMonthlyRevenue(merchantAddress, startTime);
+    // Transform revenue object into two arrays
+    const revenueData = {
+        months: Object.keys(revenue),
+        amounts: Object.values(revenue)
+    };
 
     const subscriberInfo = await getSubscribers(merchantAddress);
 
-    return {accountAddress, accountBalance, mrr, currentLoan, revenue, subscriberInfo};
+    return {accountAddress, accountBalance, mrr, currentLoan, revenue: revenueData, subscriberInfo};
 }
 
 async function getSubscriptionPayments(merchant, startTime) {
@@ -298,4 +303,258 @@ async function getSubscribers(merchant) {
       subscribers: uniqueSubscribers,
     };
 }
+
+export const getInvestorDetails = async (investorAddress) => {
+  const factoryContract = new ethers.Contract(Addresses.investorFactory, factoryABI, ethenaProvider);
+  const accountAddress = await factoryContract.getAccountAddress(investorAddress);
+
+  const usdeContract = new ethers.Contract(Addresses.usde, erc20ABI, ethenaProvider);
+  const _accountBalance = await usdeContract.balanceOf(accountAddress);
+  const accountBalance = ethers.formatEther(_accountBalance);
+
+  const totalDisbursed = await getInvestorLoanDisbursed(accountAddress);
+
+  const activeLoans = await getInvestorLoans(accountAddress);
+
+  const result = await getAmountDisbursedPerMonth(investorAddress);
+
+  return { accountAddress, accountBalance, totalDisbursed, activeLoans, result }
+}
+
+async function getInvestorLoanDisbursed(investor) {
+  const query = `
+    query GetLoanDisbursed($investor: Bytes!) {
+      loanDisburseds(where: { investorAccount: $investor }) {
+        amount
+      }
+    }
+  `;
+
+  const variables = {
+    investor,
+  };
+
+  const response = await fetch(
+    "https://api.goldsky.com/api/public/project_cm3ncp19ujci701vq9ub0hkzm/subgraphs/Vaulte/1.0.0/gn",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+
+  const data = await response.json();
+  const loans = data.data.loanDisburseds;
+
+  // Sum all amounts and convert from BigInt with 18 decimals
+  const totalDisbursed = loans.reduce((total, loan) => {
+    return total + Number(loan.amount) / 1e18;
+  }, 0);
+
+  return totalDisbursed;
+}
+
+const getInvestorLoans = async (investorAccount) => {
+  const investorContract = new ethers.Contract(investorAccount, investorAccountABI, ethenaProvider);
+  const loanCount = await investorContract._loanCount();
+
+  console.log(investorAccount, investorContract, loanCount);
   
+  let activeLoans = [];
+
+  for (let i = 0; i < loanCount; i++) {
+    const loan = await investorContract.loans(i);
+    const merchantName = await getMerchantName(loan[0]);
+    const loanAmount = Number(ethers.formatEther(loan[1]))
+
+    const activeLoan = {
+      merchantName: merchantName,
+      loanAmount: loanAmount
+    }
+    activeLoans.push(activeLoan);
+  }
+
+  return activeLoans;
+}
+
+const getMerchantName = async (merchantAddress) => {
+  const factoryContract = new ethers.Contract(Addresses.merchantFactory, merchantFactoryABI, ethenaProvider);
+  const merchantCount = await factoryContract._merchantCount();
+  
+  for (let i = 0; i < merchantCount; i++) {
+      const merchant = await factoryContract.merchantType(i);
+      if (merchant[1].toLowerCase() === merchantAddress.toLowerCase()) {
+        return merchant[0];
+      }
+  }
+  
+  return "Merchant";
+}
+
+async function getAmountDisbursedPerMonth(investor) {
+  const query = `
+    query GetLoanDisbursed($investor: Bytes!) {
+      loanDisburseds(where: { investorAccount: $investor }) {
+        amount
+        blockTimestamp
+      }
+    }
+  `;
+
+  const variables = {
+    investor,
+  };
+
+  const response = await fetch(
+    "https://api.goldsky.com/api/public/project_cm3ncp19ujci701vq9ub0hkzm/subgraphs/Vaulte/1.0.0/gn",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+
+  const data = await response.json();
+  const loans = data.data.loanDisburseds;
+
+  // Process loans to group by month
+  const amountsByMonth = loans.reduce((result, loan) => {
+    const timestamp = Number(loan.blockTimestamp) * 1000; // Convert to milliseconds
+    const date = new Date(timestamp);
+    const monthKey = date.toLocaleString("en-US", { month: "short", year: "numeric" }); // e.g., "Nov 2024"
+
+    const amount = Number(loan.amount) / 1e18; // Convert BigInt with 18 decimals
+
+    if (!result[monthKey]) {
+      result[monthKey] = 0;
+    }
+
+    result[monthKey] += amount;
+    return result;
+  }, {});
+
+  // Extract the months and amounts into separate arrays
+  const months = Object.keys(amountsByMonth);
+  const amounts = Object.values(amountsByMonth);
+
+  return { months, amounts };
+}
+
+export const getStats = async () => {
+  const totalLoans = await getTotalNumberOfLoansDisbursed();
+  const totalDisbursed = await getTotalAmountDisbursed();
+  const totalActiveSubscriptions = await getActiveSubscriptions();
+  const totalUSDe = await getTotalSubscriptionPayments();
+
+  console.log(totalLoans, totalDisbursed, totalActiveSubscriptions, totalUSDe);
+  
+  return {totalLoans, totalDisbursed, totalActiveSubscriptions, totalUSDe}
+}
+
+async function getTotalNumberOfLoansDisbursed() {
+  const query = `
+    query GetTotalLoans {
+      loanDisburseds {
+        id
+      }
+    }
+  `;
+
+  const response = await fetch(
+    "https://api.goldsky.com/api/public/project_cm3ncp19ujci701vq9ub0hkzm/subgraphs/Vaulte/1.0.0/gn",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }
+  );
+
+  const data = await response.json();
+  const totalLoans = data.data.loanDisburseds.length;
+
+  return totalLoans;
+}
+
+async function getTotalAmountDisbursed() {
+  const query = `
+    query GetTotalLoanAmounts {
+      loanDisburseds {
+        amount
+      }
+    }
+  `;
+
+  const response = await fetch(
+    "https://api.goldsky.com/api/public/project_cm3ncp19ujci701vq9ub0hkzm/subgraphs/Vaulte/1.0.0/gn",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }
+  );
+
+  const data = await response.json();
+  const loans = data.data.loanDisburseds;
+
+  // Sum up all amounts and convert from BigInt with 18 decimals
+  const totalAmount = loans.reduce((sum, loan) => {
+    const amount = Number(loan.amount) / 1e18; // Convert to readable format
+    return sum + amount;
+  }, 0);
+
+  return totalAmount;
+}
+
+async function getActiveSubscriptions() {
+  const query = `
+    query GetActiveSubscriptions {
+      subs {
+        id
+      }
+    }
+  `;
+
+  const response = await fetch(
+    "https://api.goldsky.com/api/public/project_cm3ncp19ujci701vq9ub0hkzm/subgraphs/Vaulte/1.0.0/gn",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }
+  );
+
+  const data = await response.json();
+  const activeSubscriptions = data.data.subs.length; // Count all entries
+
+  return activeSubscriptions;
+}
+
+async function getTotalSubscriptionPayments() {
+  const query = `
+    query GetTotalSubscriptionPayments {
+      subscriptionPayments {
+        paymentAmount
+      }
+    }
+  `;
+
+  const response = await fetch(
+    "https://api.goldsky.com/api/public/project_cm3ncp19ujci701vq9ub0hkzm/subgraphs/Vaulte/1.0.0/gn",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    }
+  );
+
+  const data = await response.json();
+  const payments = data.data.subscriptionPayments;
+
+  // Sum all paymentAmounts and convert from BigInt with 18 decimals
+  const totalUSDe = payments.reduce((sum, payment) => {
+    const amount = Number(payment.paymentAmount) / 1e18; // Convert to readable format
+    return sum + amount;
+  }, 0);
+
+  return totalUSDe;
+}

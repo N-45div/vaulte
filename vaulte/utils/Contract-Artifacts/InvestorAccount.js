@@ -78,5 +78,57 @@ export const investorAccountABI = [
         ],
         "stateMutability": "view",
         "type": "function"
-    }
+  },
+  {
+    "inputs": [],
+    "name": "_loanCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "loans",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "repaymentAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "repaidAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "loanPeriod",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "monthlyRepaymentAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
 ]
