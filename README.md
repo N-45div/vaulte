@@ -50,9 +50,6 @@ Vaulte solves these challenges with:
 3. **For Collectives**:  
    - Create or join loan pools to support like-minded businesses and collect interests on those loans.  
 
-### Visual Flow  
-(Add a flowchart or user journey diagram here to illustrate the process.)  
-
 ---  
 
 ## Technologies Used  
