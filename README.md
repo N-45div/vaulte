@@ -82,7 +82,7 @@ loan requests, enables invesstors to accept loan offers and to pay off loans. Th
 code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/MerchantFactory.sol).
 
 - Pool Factory - The main functionality of this smart contract is to deploy investor pool smart contracts and keeping track of them. The full code is 
-found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/PoolFactory.sol).
+found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/poolFactory.sol).
 
 - Router - The main functionality of this smart contract as the name implies is to cordinate transactions between contracts without overexposing them 
 (some functions in other contracts are marked with the onlyRouter modifier). The events in this contract are indexed and tracked by the deployed 
