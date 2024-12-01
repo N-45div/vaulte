@@ -54,7 +54,8 @@ Vaulte solves these challenges with:
 3. **For Collectives**:  
    - Create or join loan pools to support like-minded businesses and collect interests on those loans.  
 
-Vaulte is designed in a P2P manner which allows retail investors contribute funds towards a loan pool which merchants can take out loans from and then pay back interest to 
+Vaulte is designed in a P2P manner which allows retail investors contribute funds towards a loan pool which merchants can take out loans from and 
+then pay back interest to 
 the loan pool. After that the retail investors can then redeem their return on investments after a set period of time.
 Merchants can also make requests for loans, this enables them to state their preffered repayment period, the amount they want and the interest they are willing to pay.
 Investors on the other hand can also make loan offers and interested merchants can go through those offers and select one that suits their needs.
@@ -190,8 +191,8 @@ Below is a run through of the contracts deployments and transaction hashes
 | **investorFactory** | 0xd85259F42bF53c35c041ABfd3A2C38a10Bc40ec7 | 0x3ad80a8597c647b3d4f08c1a87ec82586f314e4b9cf81d865254faa5c3a267f9 |
 | **merchantFactory** | 0xb34817bEE783107Aad0077E27c20977146684ED4 | 0x37f51fd42871b2fa0b07daf191633878840e2414112a0cec0df8356a4fc5f389 | 
 | **poolFactory**     | 0x5474C94152DFeB642607758dECF156f590D092dD | 0x05de26cb8d0c1359cc5c0f63e549bf65d1c703b5095b97f5073ffadceae47baf |
-| **MerchantAccount** |  |  |
-| **InvestorAccount** |  |  |
+| **MerchantAccount** | 0x4E31E24005f85082CaCe5f9562B133B6e18dDC31 | 0x92c592d46ddd3b17103bc9a88cf97c43bcea1c34ed913e872750a7753b7a43b3 |
+| **InvestorAccount** | 0x0E1d1564d41Ba4526622A6Da754B17BA227d4799 | 0x0907be5e60444ec66c6bd9afb62239a3c755ceeac884be62005f765c69a11261 |
 
 USDe was utilized in the disbursement of loans as well as for subscription payments, below are some code snippets showing how usde was utilized
 
