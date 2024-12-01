@@ -50,6 +50,83 @@ Vaulte solves these challenges with:
 3. **For Collectives**:  
    - Create or join loan pools to support like-minded businesses and collect interests on those loans.  
 
+Vaulte is designed in a P2P manner which allows retail investors contribute funds towards a loan pool which merchants can take out loans from and then pay back interest to the loan pool. After that the retail investors can then redeem their return on investments after a set period of time.
+Merchants can also make requests for loans, this enables them to state their preffered repayment period, the amount they want and the interest they are willing to pay.
+Investors on the other hand can also make loan offers and interested merchants can go through those offers and select one that suits their needs.
+To make loan repayment easy and seamless for merchants, loan repayments are made in installments anytime the merchant account receives funds from subscriptions, the repayment amount to subscription amount is calculated and deducted upon every subscription payment. Merchants have the option to make one time loan repayments as well.
+Below are code snippets that show the processes described above.
+
+- creating loan pool
+```solidity
+    /**
+     * @notice Creates a new investment pool
+     * @dev Deploys a new InvestorPool contract and stores its information
+     * @param poolName Name of the pool to be created
+     * @param interest Interest rate for loans in the pool
+     * @param loanPeriod Duration of loans in the pool
+     */
+    function createPool(string memory poolName, uint256 interest, uint256 loanPeriod) external {
+        InvestorPool newPool = new InvestorPool(routerAddress, usde, msg.sender, interest, loanPeriod);
+        pools[_poolCount.current()].poolName = poolName;
+        pools[_poolCount.current()].poolAddress = address(newPool);
+        pools[_poolCount.current()].owner = msg.sender;
+        pools[_poolCount.current()].interest = interest;
+        _poolCount.increment();
+    }
+```
+
+- Contributing to loan pool
+```solidity
+    /**
+     * @notice Allows an investor to contribute funds to the pool
+     * @param investorAccount The address of the investor
+     * @param amount The amount of USDE tokens to contribute
+     * @dev Only callable by the router contract
+     */
+    function contribute(address investorAccount, uint256 amount) external onlyRouter() {
+        require(amount > 0, "Amount must be greater than 0");
+        investors[investorAccount] = amount;
+        investmentAmount = investmentAmount + amount;
+    }
+```
+
+- Getting loan from loan pool
+```solidity
+    /**
+     * @notice Allows a merchant to take out a loan from the pool
+     * @param merchantAccount The address of the merchant
+     * @param amount The amount of USDE tokens to borrow
+     * @param loanPeriod_ The duration of the loan in months
+     * @dev Only callable by the router contract
+     */
+    function getLoan(address merchantAccount, uint256 amount, uint256 loanPeriod_) external onlyRouter() {
+        require(amount > 0, "Amount must be greater than 0");
+        require(investmentAmount > 0, "Pool has no funds");
+        
+        uint256 amountPercentage = (amount * 100) / investmentAmount;
+        require(amountPercentage <= 10, "Amount too high");
+        require(loanPeriod_ <= loanPeriod, "max repayment period exceeded");
+
+        uint256 repaymentAmount = amount + ((interest * amount) / 100);
+        uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod_;
+        
+        uint256 loanId = _loanCount.current();
+        loans[loanId] = loan(
+            merchantAccount,
+            repaymentAmount,
+            0,
+            loanPeriod_,
+            monthlyRepaymentAmount
+        );
+        _loanCount.increment();
+
+        require(IERC20(usde).transfer(merchantAccount, amount), "Transfer failed");
+    }
+```
+
+The code for other processes mentioned above can be found [here](https://github.com/N-45div/vaulte/blob/
+Ethena-Hackathon/Smart-Contracts/contracts).
+
 ### Visual Flow  
 (Add a flowchart or user journey diagram here to illustrate the process.)  
 
@@ -106,6 +183,67 @@ The smart contracts for the dapp were deployed on on the Ethena ble testnet and 
 to disbursing loans.
 Below is a run through of the contracts deployments and transaction hashes
 
+| **Contract**        | **Addres**                                 | **TXHash**                                                         |
+|---------------------|--------------------------------------------|--------------------------------------------------------------------|
+| **Router**          | 0x0058e73DE38A00a870beEA2b0185432C9b01eA61 | 0x92c592d46ddd3b17103bc9a88cf97c43bcea1c34ed913e872750a7753b7a43b3 |
+| **userFactory**     | 0x8b576DAdF5b8ecE2DD38160448ABAF64fC70f062 | 0x4e18ce9ff7dd3217240d947348b86d1377eedbabaf2a97367760319d60fd3a36 |
+| **investorFactory** | 0xd85259F42bF53c35c041ABfd3A2C38a10Bc40ec7 | 0x3ad80a8597c647b3d4f08c1a87ec82586f314e4b9cf81d865254faa5c3a267f9 |
+| **merchantFactory** | 0xb34817bEE783107Aad0077E27c20977146684ED4 | 0x37f51fd42871b2fa0b07daf191633878840e2414112a0cec0df8356a4fc5f389 | 
+| **poolFactory**     | 0x5474C94152DFeB642607758dECF156f590D092dD | 0x05de26cb8d0c1359cc5c0f63e549bf65d1c703b5095b97f5073ffadceae47baf |
+| **MerchantAccount** |  |  |
+| **InvestorAccount** |  |  |
+
+USDe was utilized in the disbursement of loans as well as for subscription payments, below are some code snippets showing how usde was utilized
+
+- subscription payment
+
+```solidity
+    /// @notice Processes a subscription payment
+    /// @param amount Amount to pay for the subscription
+    /// @param merchantAddress Address of the merchant to pay
+    function paySubscription(uint256 amount, address merchantAddress) external onlyRouter() {
+        for (uint i = 0; i < _subscriptionCount.current(); i++) {
+            if (userSubscriptions[i].merchantAddress == merchantAddress && userSubscriptions[i].status == true) {
+                IERC20(usde).transfer(merchantAddress, amount);
+            }
+        }
+    }
+```
+
+- Pool loan processing
+
+```solidity
+    /**
+     * @notice Allows a merchant to take out a loan from the pool
+     * @param merchantAccount The address of the merchant
+     * @param amount The amount of USDE tokens to borrow
+     * @param loanPeriod_ The duration of the loan in months
+     * @dev Only callable by the router contract
+     */
+    function getLoan(address merchantAccount, uint256 amount, uint256 loanPeriod_) external onlyRouter() {
+        require(amount > 0, "Amount must be greater than 0");
+        require(investmentAmount > 0, "Pool has no funds");
+        
+        uint256 amountPercentage = (amount * 100) / investmentAmount;
+        require(amountPercentage <= 10, "Amount too high");
+        require(loanPeriod_ <= loanPeriod, "max repayment period exceeded");
+
+        uint256 repaymentAmount = amount + ((interest * amount) / 100);
+        uint256 monthlyRepaymentAmount = repaymentAmount / loanPeriod_;
+        
+        uint256 loanId = _loanCount.current();
+        loans[loanId] = loan(
+            merchantAccount,
+            repaymentAmount,
+            0,
+            loanPeriod_,
+            monthlyRepaymentAmount
+        );
+        _loanCount.increment();
+
+        require(IERC20(usde).transfer(merchantAccount, amount), "Transfer failed");
+    }
+```
 
 ### Goldsky
 
