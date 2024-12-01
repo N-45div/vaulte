@@ -92,8 +92,7 @@ found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contr
 subgraph. The full code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/router.sol).
 
 - User Account - This serves as the contract account for end users and the main functionality of this smart contract is for end users to subscribe to 
-merchants and pay for subscriptions. The full code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/
-userAccount.sol).
+merchants and pay for subscriptions. The full code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/userAccount.sol).
 
 - User Factory - The main functionality of this smart contract is to deploy user account smart contracts and keeping track of them. The full code is 
 found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/UserFactory.sol).
