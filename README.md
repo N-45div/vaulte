@@ -69,8 +69,7 @@ Vaulte solves these challenges with:
 Various smart contracts were written to handle the core functionalities of the dapp, here's a run down of the smart contracts and their functions.
 
 - Investor Account - This serves as the contract account for investors and the main functionality of this smart contract is for investors to create 
-pools and loan offers, it also enables invesstors to accept loan requests. The full code is found [here](https://github.com/N-45div/vaulte/blob/
-Ethena-Hackathon/Smart-Contracts/contracts/InvestorAccount.sol).
+pools and loan offers, it also enables invesstors to accept loan requests. The full code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/InvestorAccount.sol).
 
 - Investor Factory - The main functionality of this smart contract is to deploy investor account smart contracts and keeping track of them. The full 
 code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/InvestorFactory.sol).
@@ -80,8 +79,7 @@ Investors can contribute/invest funds and redeem returns in an investor pool con
 investor pool. The full code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/InvestorPool.sol).
 
 - Merchant Account - This serves as the contract account for merchants and the main functionality of this smart contract is for merchants to create 
-loan requests, enables invesstors to accept loan offers and to pay off loans. The full code is found [here](https://github.com/N-45div/vaulte/blob/
-Ethena-Hackathon/Smart-Contracts/contracts/MerchantAccount.sol).
+loan requests, enables invesstors to accept loan offers and to pay off loans. The full code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/MerchantAccount.sol).
 
 - Merchant Factory - The main functionality of this smart contract is to deploy merchant account smart contracts and keeping track of them. The full 
 code is found [here](https://github.com/N-45div/vaulte/blob/Ethena-Hackathon/Smart-Contracts/contracts/MerchantFactory.sol).
