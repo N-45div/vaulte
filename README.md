@@ -31,6 +31,8 @@ The lack of accessible, flexible loans for online businesses and indie hackers l
 
 ## Solution  
 
+A decentralized P2P lending platform that allows creatives, indiehackers and online businesses leverage their MRR to get equity-free, low interest loans from pools created and funded by retail investors.
+
 Vaulte solves these challenges with:  
 1. **Subscription-Based Payment Infrastructure**: Simplifies user transactions and ensures reliable revenue streams.  
 2. **Re-Investing Loan Repayments**: Maximizes financial impact by reinvesting repayments for sustained growth.  
@@ -50,10 +52,12 @@ Vaulte solves these challenges with:
 3. **For Collectives**:  
    - Create or join loan pools to support like-minded businesses and collect interests on those loans.  
 
-Vaulte is designed in a P2P manner which allows retail investors contribute funds towards a loan pool which merchants can take out loans from and then pay back interest to the loan pool. After that the retail investors can then redeem their return on investments after a set period of time.
+Vaulte is designed in a P2P manner which allows retail investors contribute funds towards a loan pool which merchants can take out loans from and then pay back interest to 
+the loan pool. After that the retail investors can then redeem their return on investments after a set period of time.
 Merchants can also make requests for loans, this enables them to state their preffered repayment period, the amount they want and the interest they are willing to pay.
 Investors on the other hand can also make loan offers and interested merchants can go through those offers and select one that suits their needs.
-To make loan repayment easy and seamless for merchants, loan repayments are made in installments anytime the merchant account receives funds from subscriptions, the repayment amount to subscription amount is calculated and deducted upon every subscription payment. Merchants have the option to make one time loan repayments as well.
+To make loan repayment easy and seamless for merchants, loan repayments are made in installments anytime the merchant account receives funds from subscriptions, the 
+repayment amount to subscription amount is calculated and deducted upon every subscription payment. Merchants have the option to make one time loan repayments as well.
 Below are code snippets that show the processes described above.
 
 - creating loan pool
@@ -406,10 +410,9 @@ below is the api endpoint provided by goldsky which can enable anyone query the 
 
 ## Future Improvements  
 
-1. Expand loan pool functionalities with multi-chain support.  
-2. Integrate support for multiple stablecoins.  
-3. Add analytics dashboards for creators and investors.  
-4. Explore dynamic APR based on market conditions.  
+1. Expand loan pool functionalities with multi-chain support.
+2. Extensive audits on the protocol's smart contracts.
+3. Improve on and build out a full fledged payment system for creatives, indiehackers and end users.
 
 ---  
 
